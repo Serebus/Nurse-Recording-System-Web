@@ -4,6 +4,8 @@ import Patientview from '../views/PatientView.vue'
 import PatientRecords from '@/views/PatientRecords.vue'
 import LoginView from '@/views/LoginView.vue'
 import AppointmentView from '@/views/AppointmentView.vue'
+import RecordFollowupView from '@/views/RecordFollowupView.vue'
+import DashboardView from '@/views/DashboardView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,6 +13,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
+      component: DashboardView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/patients',
+      name: 'patients',
       component: Patientview,
       meta: { requiresAuth: true },
     },
@@ -18,6 +26,12 @@ const router = createRouter({
       path: '/patientrecords/:id',
       name: 'patientrecords',
       component: PatientRecords,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/patientsrecords/:id/:recordId/followup',
+      name: 'followup',
+      component: RecordFollowupView,
       meta: { requiresAuth: true },
     },
     {
@@ -37,6 +51,12 @@ const router = createRouter({
       component: () => import('../views/PrintView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/recommendation/:patientId/:recordId',
+      name: 'recommendation',
+      component: () => import('../views/Recommendation.vue'),
+      meta: { requiresAuth: true },
+    }
   ],
 })
 
