@@ -82,7 +82,7 @@ import { computed, inject } from 'vue'
 
 // Use inject to get router and route from parent
 const router = inject('router')
-const route = inject('route') 
+const route = inject('route')
 const authStore = inject('authStore')
 
 const navigationItems = [
