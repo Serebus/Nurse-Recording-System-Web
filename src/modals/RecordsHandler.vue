@@ -56,8 +56,8 @@
             rows="3"
             placeholder="Describe the patient's symptoms..."
             class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:border-transparent transition-all duration-300 resize-none text-gray-800 placeholder-gray-400"
-            required          
-            ></textarea>
+            required
+          ></textarea>
         </div>
 
         <div class="form-group">
@@ -142,7 +142,7 @@
             <i class="fa-solid fa-print mr-1"></i>
             Print Record
           </button>
-          
+
           <div class="flex gap-3 ml-auto">
             <button
               @click="closeModal"
@@ -198,16 +198,16 @@ const submitHandler = async () => {
 const handlePrintRecord = () => {
   const patientId = route.params.id
   const recordId = patientRecordStore.recordForm.id
-  
+
   // Navigate to print view with both patient and record IDs
   router.push({
     name: 'printview',
     params: {
       patientId: patientId,
-      recordId: recordId
-    }
+      recordId: recordId,
+    },
   })
-  
+
   closeModal()
 }
 </script>
