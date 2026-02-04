@@ -52,11 +52,17 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/record/:patientId/:recordId/:FolowupId?',
+      name: 'record',
+      component: () => import('../views/RecordFollowupView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/recommendation/:patientId/:recordId',
       name: 'recommendation',
       component: () => import('../views/Recommendation.vue'),
       meta: { requiresAuth: true },
-    }
+    },
   ],
 })
 
