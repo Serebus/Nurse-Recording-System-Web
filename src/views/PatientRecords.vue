@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex font-poppins bg-gray-50 text-gray-900">
+  <div class="min-h-screen flex font-poppins bg-[#F0F2FF] text-gray-900">
     <!-- Sidebar -->
     <SidebarComponent />
 
@@ -8,13 +8,13 @@
       <!-- Back Button -->
       <button
         @click="goBack"
-        class="mb-6 px-6 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all flex items-center gap-2"
+        class="mb-6 px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:shadow-md transition-all flex items-center gap-2 text-sm"
       >
-        <i class="fa-solid fa-arrow-left"></i>
-        Back to Patients
+        <i class="fa-solid fa-arrow-left text-[#2933FF]"></i>
+        Back to Dashboard
       </button>
 
-      <div class="Personalinfo bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
+      <div class="Personalinfo bg-white rounded-2xl shadow-sm p-8 mb-8 border border-white">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
             <div
@@ -28,7 +28,7 @@
               >
                 {{ patient?.firstname }} {{ patient?.lastname }}
               </h2>
-              <p class="text-gray-500 text-sm mt-1">Patient Medical Records</p>
+              <p class="text-gray-500 text-sm mt-1">Patient Medical Records · #{{ patientId }}</p>
             </div>
           </div>
           <div class="flex gap-3">
@@ -61,11 +61,11 @@
             type="text"
             v-model="searchQuery"
             placeholder="Search records..."
-            class="w-full pl-14 pr-6 py-4 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:shadow-xl bg-white text-gray-800 placeholder-gray-400 transition-all duration-300 border border-gray-100"
+            class="w-full pl-14 pr-6 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:shadow-xl bg-white text-gray-800 placeholder-gray-400 transition-all duration-300 border border-gray-100"
           />
         </div>
 
-        <div v-if="filteredRecords.length === 0" class="text-center py-12">
+        <div v-if="filteredRecords.length === 0" class="text-center py-12 bg-white rounded-2xl shadow-sm">
           <div
             class="w-20 h-20 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center mx-auto mb-4"
           >
@@ -80,13 +80,14 @@
           <div
             v-for="record in filteredRecords"
             :key="record.id"
-            class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 duration-300 border border-gray-100 group relative overflow-hidden"
+            class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 duration-300 border border-gray-100 group relative overflow-hidden cursor-pointer"
+            @click="goToFollowup(record)"
           >
             <div
               class="absolute inset-0 bg-gradient-to-br from-[#2933FF]/5 to-[#FF5451]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             ></div>
 
-            <div class="relative z-10">
+            <div class="relative z-10 p-6">
               <div class="flex items-start justify-between mb-4">
                 <div class="flex items-center gap-2">
                   <span
@@ -105,7 +106,7 @@
                     <p class="text-xs text-gray-400 mt-0.5">{{ record.recordId }}</p>
                   </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2" @click.stop>
                   <button
                     @click="printSingleRecord(record.id)"
                     class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95"
@@ -143,7 +144,7 @@
                   </span>
                   <div>
                     <h3 class="text-sm font-semibold text-gray-700 mb-1">Symptom</h3>
-                    <p class="text-sm text-gray-600">{{ record.symptom }}</p>
+                    <p class="text-sm text-gray-600 line-clamp-2">{{ record.symptom }}</p>
                   </div>
                 </div>
 
@@ -157,7 +158,7 @@
                   </span>
                   <div>
                     <h3 class="text-sm font-semibold text-gray-700 mb-1">Treatment</h3>
-                    <p class="text-sm text-gray-600">{{ record.treatment }}</p>
+                    <p class="text-sm text-gray-600 line-clamp-2">{{ record.treatment }}</p>
                   </div>
                 </div>
 
@@ -171,19 +172,35 @@
                   </span>
                   <div>
                     <h3 class="text-sm font-semibold text-gray-700 mb-1">Notes</h3>
-                    <p class="text-sm text-gray-600">{{ record.notes }}</p>
+                    <p class="text-sm text-gray-600 line-clamp-2">{{ record.notes }}</p>
                   </div>
                 </div>
 
-                <div class="flex items-center gap-2 pt-2 border-t border-gray-100">
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="w-8 h-8 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center"
+                    >
+                      <i
+                        class="fa-solid fa-calendar text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
+                      ></i>
+                    </span>
+                    <p class="text-xs text-gray-500">{{ formatDate(record.date) }}</p>
+                  </div>
+                  <!-- Follow-up count badge -->
                   <span
-                    class="w-8 h-8 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center"
+                    class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-100"
                   >
-                    <i
-                      class="fa-solid fa-calendar text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-                    ></i>
+                    <i class="fa-solid fa-rotate-right mr-1 text-emerald-500"></i>
+                    {{ getFollowupCount(record.id) }} follow-up{{ getFollowupCount(record.id) !== 1 ? 's' : '' }}
                   </span>
-                  <p class="text-xs text-gray-500">{{ formatDate(record.date) }}</p>
+                </div>
+
+                <!-- CTA hint -->
+                <div class="opacity-0 group-hover:opacity-100 transition-opacity pt-1">
+                  <p class="text-xs text-center text-[#2933FF] font-semibold">
+                    Click to view details &amp; follow-ups →
+                  </p>
                 </div>
               </div>
             </div>
@@ -212,8 +229,7 @@
         </div>
         <p class="text-gray-600 mb-6">
           Are you sure you want to delete the record for
-          <span class="font-semibold">{{ recordToDelete?.diagnosis }}</span
-          >?
+          <span class="font-semibold">{{ recordToDelete?.diagnosis }}</span>?
         </p>
         <div class="flex justify-end gap-3">
           <button
@@ -239,6 +255,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePatientRecord } from '@/stores/patientRecord'
 import { usePatientStore } from '@/stores/patientsStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useFollowupStore } from '@/stores/FollowupStore'
 import { computed, ref, provide } from 'vue'
 import SidebarComponent from '@/components/SidebarComponent.vue'
 import RecordsHandler from '@/modals/RecordsHandler.vue'
@@ -248,8 +265,8 @@ const router = useRouter()
 const patientsStore = usePatientStore()
 const patientRecord = usePatientRecord()
 const authStore = useAuthStore()
+const followupStore = useFollowupStore()
 
-// Provide dependencies to SidebarComponent
 provide('router', router)
 provide('route', route)
 provide('authStore', authStore)
@@ -270,7 +287,6 @@ const records = computed(() => {
 
 const filteredRecords = computed(() => {
   if (!searchQuery.value) return records.value
-
   const query = searchQuery.value.toLowerCase()
   return records.value.filter(
     (record) =>
@@ -282,37 +298,38 @@ const filteredRecords = computed(() => {
   )
 })
 
+const getFollowupCount = (recordId) => {
+  return followupStore.followups.filter(
+    f => String(f.patientId) === String(patientId) && String(f.recordId) === String(recordId)
+  ).length
+}
+
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 const goBack = () => {
   router.push({ name: 'home' })
 }
 
-const printAllRecords = () => {
+const goToFollowup = (record) => {
   router.push({
-    name: 'printview',
+    name: 'record',
     params: {
       patientId: patientId,
+      recordId: record.id,
     },
   })
 }
 
+const printAllRecords = () => {
+  router.push({ name: 'printview', params: { patientId: patientId } })
+}
+
 const printSingleRecord = (recordId) => {
-  router.push({
-    name: 'printview',
-    params: {
-      patientId: patientId,
-      recordId: recordId,
-    },
-  })
+  router.push({ name: 'printview', params: { patientId: patientId, recordId: recordId } })
 }
 
 const openAddRecordModal = () => {
@@ -350,4 +367,11 @@ const handleDelete = async () => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 </style>
