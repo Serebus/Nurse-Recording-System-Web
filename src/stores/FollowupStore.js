@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const API_BASE_URL = 'http://localhost:3000'
 
@@ -88,12 +88,14 @@ export const useFollowupStore = defineStore('followupStore', () => {
   }
 
   const isEditMode = computed(() => FollowupForm.value.id !== null)
+
   const setFormforEdit = (followup) => {
     FollowupForm.value = { ...followup }
   }
-  const editFollowup = async (id, updatedFolowup) => {
+
+  const editFollowup = async (id, updatedFollowup) => {
     const serverID = id
-    const followupToPut = { ...updatedFolowup }
+    const followupToPut = { ...updatedFollowup }
     delete followupToPut.id
 
     try {
@@ -121,7 +123,9 @@ export const useFollowupStore = defineStore('followupStore', () => {
     if (isEditMode.value) {
       return await editFollowup(FollowupForm.value.id, FollowupForm.value)
     } else {
-      return await addFollowup(FollowupForm.value)
+      const payload = { ...FollowupForm.value }
+      delete payload.id
+      return await addFollowup(payload)
     }
   }
 
