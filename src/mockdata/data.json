@@ -50,7 +50,7 @@
       "password": "123456",
       "facebook": "",
       "email": "dummy3@gmail.com",
-      "emergencyContact": 96042294701
+      "emergencyContact": "09604229470"
     },
     {
       "id": 6,
@@ -61,7 +61,7 @@
       "password": "123456",
       "facebook": "sad",
       "email": "dummy5@gmail.com",
-      "emergencyContact": 23425678902
+      "emergencyContact": "09342567890"
     }
   ],
   "patientRecords": [
@@ -95,5 +95,6 @@
       "time": "07:01",
       "reason": "Trial Edit"
     }
-  ]
+  ],
+  "followups": []
 }
