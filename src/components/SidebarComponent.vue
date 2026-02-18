@@ -87,8 +87,14 @@ const authStore = inject('authStore')
 
 const navigationItems = [
   {
-    name: 'Patients',
+    name: 'Dashboard',
     path: '/',
+    icon: 'fa-solid fa-house',
+    description: 'Overview & stats',
+  },
+  {
+    name: 'Patients',
+    path: '/patients',
     icon: 'fa-solid fa-users',
     description: 'Manage patients',
   },
@@ -119,7 +125,9 @@ const userInitials = computed(() => {
 
 const isActive = (path) => {
   if (!route) return false
-  return route.path === path
+  if (path === '/' && route.path === '/') return true
+  if (path !== '/' && route.path.startsWith(path)) return true
+  return false
 }
 
 const navigateTo = (path) => {
