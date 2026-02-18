@@ -4,7 +4,6 @@ import Patientview from '../views/PatientView.vue'
 import PatientRecords from '@/views/PatientRecords.vue'
 import LoginView from '@/views/LoginView.vue'
 import AppointmentView from '@/views/AppointmentView.vue'
-import RecordFollowupView from '@/views/RecordFollowupView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 
 const router = createRouter({
@@ -29,12 +28,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/patientsrecords/:id/:recordId/followup',
-      name: 'followup',
-      component: RecordFollowupView,
-      meta: { requiresAuth: true },
-    },
-    {
       path: '/appointments',
       name: 'appointments',
       component: AppointmentView,
@@ -52,7 +45,8 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/record/:patientId/:recordId/:FolowupId?',
+      // Record detail + followups view
+      path: '/record/:patientId/:recordId/:followupId?',
       name: 'record',
       component: () => import('../views/RecordFollowupView.vue'),
       meta: { requiresAuth: true },
