@@ -1,15 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const API_BASE_URL = 'http://localhost:3000'
+import { useAuthStore } from './authStore.js'
 
 export const usePatientRecord = defineStore('patientRecord', () => {
+  const authStore = useAuthStore()
+
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
+  })
   const patientRecords = ref([])
 
   // --- API Fetching ---
   const fetchRecords = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/patientRecords`)
+      const response = await fetch('/api/patientrecords', {
+        headers: getHeaders()
+      })
       if (!response.ok) throw new Error('Failed to fetch patient records')
       const data = await response.json()
       // Use the server's primary key 'id' consistently.
@@ -99,9 +106,9 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     delete recordToPost.id
 
     try {
-      const response = await fetch(`${API_BASE_URL}/patientRecords`, {
+      const response = await fetch('/api/patientrecords', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify(recordToPost),
       })
 
@@ -137,9 +144,9 @@ export const usePatientRecord = defineStore('patientRecord', () => {
 
     try {
       // Use the server ID for the endpoint
-      const response = await fetch(`${API_BASE_URL}/patientRecords/${serverId}`, {
+      const response = await fetch(`/api/patientrecords/${serverId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify(recordToPut),
       })
       if (!response.ok) throw new Error('Failed to update record')
@@ -164,8 +171,9 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     const serverId = id // The id passed is the server's primary key
 
     try {
-      const response = await fetch(`${API_BASE_URL}/patientRecords/${serverId}`, {
+      const response = await fetch(`/api/patientrecords/${serverId}`, {
         method: 'DELETE',
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete record')
 

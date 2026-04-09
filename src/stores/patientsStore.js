@@ -1,13 +1,22 @@
 import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
+import { useAuthStore } from './authStore.js'
 
 export const usePatientStore = defineStore('patientStore', () => {
+  const authStore = useAuthStore()
   const searchterm = ref('')
   const patients = ref([])
 
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
+  })
+
   const fetchPatients = async () => {
     try {
-      const response = await fetch('http://localhost:3000/patients')
+      const response = await fetch('/api/patients', {
+        headers: getHeaders()
+      })
       if (!response.ok) throw new Error('Failed to fetch patients')
       patients.value = await response.json()
       console.log('Patients fetched successfully')
@@ -59,11 +68,9 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const addPatient = async (newPatient) => {
     try {
-      const response = await fetch('http://localhost:3000/patients', {
+      const response = await fetch('/api/patients', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify(newPatient),
       })
       if (!response.ok) throw new Error('Failed to add patient')
@@ -98,8 +105,9 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const deletePatient = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/patients/${id}`, {
+      const response = await fetch(`/api/patients/${id}`, {
         method: 'DELETE',
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete patient')
       patients.value = patients.value.filter((patient) => patient.id !== id)
@@ -113,11 +121,9 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const editPatient = async (id, updatedPatient) => {
     try {
-      const response = await fetch(`http://localhost:3000/patients/${id}`, {
+      const response = await fetch(`/api/patients/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify(updatedPatient),
       })
       if (!response.ok) throw new Error('Failed to update patient')

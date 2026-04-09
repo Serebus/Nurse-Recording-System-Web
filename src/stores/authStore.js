@@ -2,8 +2,11 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useAuthStore = defineStore('authStore', () => {
-  const storedNurse = localStorage.getItem('nurse')
+const storedNurse = localStorage.getItem('nurse')
+  const storedToken = localStorage.getItem('token')
   const nurse = ref(storedNurse ? JSON.parse(storedNurse) : null)
+  const token = ref(storedToken || null)
+
 
   const formLogin = ref({
     email: '',
@@ -17,29 +20,31 @@ export const useAuthStore = defineStore('authStore', () => {
     }
   }
 
-  const isAutheticated = computed(() => !!nurse.value)
+  const isAuthenticated = computed(() => !!nurse.value)
+
+  const getToken = computed(() => token.value)
 
   const login = async () => {
     try {
-      const response = await fetch('http://localhost:5022/api/Auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formLogin.value),
       })
 
       const data = await response.json()
 
-      if (data.user && data.user.isAuthenticated) {
-        // We only save the user INFO. The token is now safely hidden in a cookie.
+      if (data.token) {
+        token.value = data.token
+        localStorage.setItem('token', data.token)
         nurse.value = data.user
         localStorage.setItem('nurse', JSON.stringify(nurse.value))
-        if (data.user.nurseDetails && data.user.nurseDetails.nurseId) {
+        if (data.user?.nurseDetails?.nurseId) {
           localStorage.setItem('nurseId', data.user.nurseDetails.nurseId)
         }
         return true
       } else {
-        console.error('Login failed:', data.message)
+        console.error('Login failed:', data.message || 'No token received')
         return false
       }
     } catch (error) {
@@ -50,27 +55,27 @@ export const useAuthStore = defineStore('authStore', () => {
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:5022/api/Auth/logout', {
+      await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
       })
     } catch (error) {
       console.error('Logout error', error)
     } finally {
-      // Always clear client state, even if server errors out
+      token.value = null
       nurse.value = null
+      localStorage.removeItem('token')
       localStorage.removeItem('nurse')
       localStorage.removeItem('nurseId')
-      // Optional: Redirect to login
     }
   }
 
   return {
     nurse,
+    token,
     formLogin,
-    isAutheticated,
+    isAuthenticated,
+    getToken,
     login,
     logout,
     resetFormLogin,

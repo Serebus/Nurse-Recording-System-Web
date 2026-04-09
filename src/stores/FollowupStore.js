@@ -1,14 +1,21 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const API_BASE_URL = 'http://localhost:3000'
+import { useAuthStore } from './authStore.js'
 
 export const useFollowupStore = defineStore('followupStore', () => {
+  const authStore = useAuthStore()
+
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
+  })
   const followups = ref([])
 
   const fetchFollowups = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/followups`)
+      const response = await fetch('/api/followups', {
+        headers: getHeaders()
+      })
       if (!response.ok) throw new Error('Failed to fetch follow-ups')
       followups.value = await response.json()
       console.log('Follow-ups fetched successfully')
@@ -51,9 +58,9 @@ export const useFollowupStore = defineStore('followupStore', () => {
 
   const addFollowup = async (newFollowup) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/followups`, {
+      const response = await fetch('/api/followups', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify(newFollowup),
       })
       if (!response.ok) throw new Error('Failed to add follow-up')
@@ -75,8 +82,9 @@ export const useFollowupStore = defineStore('followupStore', () => {
       return false
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/followups/${id}`, {
+      const response = await fetch(`/api/followups/${id}`, {
         method: 'DELETE',
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete follow-up')
       fetchFollowups()
@@ -99,9 +107,9 @@ export const useFollowupStore = defineStore('followupStore', () => {
     delete followupToPut.id
 
     try {
-      const response = await fetch(`${API_BASE_URL}/followups/${serverID}`, {
+      const response = await fetch(`/api/followups/${serverID}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify(followupToPut),
       })
       if (!response.ok) throw new Error('Failed to update follow-up')

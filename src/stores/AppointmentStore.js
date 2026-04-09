@@ -1,10 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { usePatientStore } from './patientsStore'
+import { useAuthStore } from './authStore.js'
 
 export const useAppointmentStore = defineStore('appointmentStore', () => {
   const patientStore = usePatientStore()
+  const authStore = useAuthStore()
   const appointments = ref([])
+
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
+  })
 
   const patientSearchTerm = ref('')
   const selectedPatientId = ref(null)
@@ -124,11 +131,8 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const fetchAppointments = async () => {
     try {
-      const response = await fetch('http://localhost:3000/appointments', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch('/api/appointments', {
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to fetch appointments')
       const data = await response.json()
@@ -149,11 +153,9 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
         appointmentId: newAppointmentId,
       }
 
-      const response = await fetch('http://localhost:3000/appointments', {
+      const response = await fetch('/api/appointments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify(payload),
       })
 
@@ -170,11 +172,9 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const editAppointment = async (id, updatedAppointment) => {
     try {
-      const response = await fetch(`http://localhost:3000/appointments/${id}`, {
+      const response = await fetch(`/api/appointments/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify(updatedAppointment),
       })
       if (!response.ok) throw new Error('Failed to update appointment')
@@ -219,8 +219,9 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const deleteAppointment = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/appointments/${id}`, {
+      const response = await fetch(`/api/appointments/${id}`, {
         method: 'DELETE',
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete appointment')
       appointments.value = appointments.value.filter((a) => a.id !== id)
