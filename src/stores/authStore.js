@@ -26,29 +26,31 @@ const storedNurse = localStorage.getItem('nurse')
 
   const login = async () => {
     try {
+      console.log('Login attempt:', formLogin.value)
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formLogin.value),
       })
-
+      console.log('Response status:', response.status)
       const data = await response.json()
-
-      if (data.token) {
-        token.value = data.token
-        localStorage.setItem('token', data.token)
-        nurse.value = data.user
+      console.log('Response data:', data)
+      const tokenFromResponse = data.accessToken || data.token
+      console.log('Token extracted:', tokenFromResponse)
+      if (tokenFromResponse) {
+        token.value = tokenFromResponse
+        localStorage.setItem('token', tokenFromResponse)
+        nurse.value = data.user?.nurse || data.user
         localStorage.setItem('nurse', JSON.stringify(nurse.value))
-        if (data.user?.nurseDetails?.nurseId) {
-          localStorage.setItem('nurseId', data.user.nurseDetails.nurseId)
-        }
+        localStorage.setItem('nurseId', data.user?.nurseDetails?.nurseId || nurse.value?.Id)
+        console.log('Login success')
         return true
       } else {
         console.error('Login failed:', data.message || 'No token received')
         return false
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Login error:', error)
       return false
     }
   }
