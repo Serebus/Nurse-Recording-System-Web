@@ -7,9 +7,16 @@ export const usePatientStore = defineStore('patientStore', () => {
   const searchterm = ref('')
   const patients = ref([])
 
-  const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
+  const getHeaders = () => {
+    const token = localStorage.getItem('token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    }
+  }
+
+  watch(() => authStore.isAuthenticated, (isAuth) => {
+    if (isAuth) fetchPatients()
   })
 
   const fetchPatients = async () => {
@@ -25,7 +32,7 @@ export const usePatientStore = defineStore('patientStore', () => {
     }
   }
 
-  fetchPatients()
+
 
   const formPatient = ref({
     id: null,
@@ -66,19 +73,35 @@ export const usePatientStore = defineStore('patientStore', () => {
     )
   })
 
+  const toPascalCase = (obj) => {
+    const pascal = {}
+    for (const [key, value] of Object.entries(obj)) {
+      const pascalKey = key.charAt(0).toUpperCase() + key.slice(1)
+      pascal[pascalKey] = value
+    }
+    // Remove Id for POST (backend auto-generates)
+    delete pascal.Id
+    return pascal
+  }
+
   const addPatient = async (newPatient) => {
     try {
+      const patientData = toPascalCase(newPatient)
       const response = await fetch('/api/patients', {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify(newPatient),
+        body: JSON.stringify(patientData),
       })
-      if (!response.ok) throw new Error('Failed to add patient')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Backend error:', errorText)
+        throw new Error(`Failed to add patient: ${errorText}`)
+      }
 
       const addedPatient = await response.json()
       patients.value.push(addedPatient)
       console.log(
-        `Patient ${addedPatient.firstname} ${addedPatient.middlename} ${addedPatient.lastname} added successfully`,
+        `Patient ${addedPatient.Firstname} ${addedPatient.Middlename} ${addedPatient.Lastname} added successfully`,
       )
       return true
     } catch (error) {
@@ -110,7 +133,7 @@ export const usePatientStore = defineStore('patientStore', () => {
         headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete patient')
-      patients.value = patients.value.filter((patient) => patient.id !== id)
+      patients.value = patients.value.filter((patient) => patient.Id !== id)
       console.log(`Patient with ID ${id} has been deleted`)
       return true
     } catch (error) {
@@ -121,16 +144,21 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const editPatient = async (id, updatedPatient) => {
     try {
+      const patientData = toPascalCase(updatedPatient)
       const response = await fetch(`/api/patients/${id}`, {
         method: 'PUT',
         headers: getHeaders(),
-        body: JSON.stringify(updatedPatient),
+        body: JSON.stringify(patientData),
       })
-      if (!response.ok) throw new Error('Failed to update patient')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Backend error:', errorText)
+        throw new Error('Failed to update patient')
+      }
 
       const updatedData = await response.json()
 
-      const index = patients.value.findIndex((patient) => patient.id === id)
+      const index = patients.value.findIndex((patient) => patient.Id == id)
       if (index !== -1) {
         patients.value[index] = updatedData
         console.log(`Patient with ID ${id} has been updated`)

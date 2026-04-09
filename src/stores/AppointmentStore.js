@@ -8,10 +8,13 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
   const authStore = useAuthStore()
   const appointments = ref([])
 
-  const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
-  })
+  const getHeaders = () => {
+    const token = localStorage.getItem('token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    }
+  }
 
   const patientSearchTerm = ref('')
   const selectedPatientId = ref(null)
@@ -79,10 +82,10 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
     return patientStore.patients.filter((patient) => {
       try {
-        const firstname = (patient.firstname || '').toLowerCase()
-        const lastname = (patient.lastname || '').toLowerCase()
-        const middlename = (patient.middlename || '').toLowerCase()
-        const contact = String(patient.emergencyContact || '')
+        const firstname = (patient.Firstname || '').toLowerCase()
+        const lastname = (patient.Lastname || '').toLowerCase()
+        const middlename = (patient.Middlename || '').toLowerCase()
+        const contact = String(patient.EmergencyContact || '')
         const fullName = `${firstname} ${middlename} ${lastname}`.toLowerCase()
 
         return (
@@ -102,7 +105,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
   // Computed property to get the details of the selected registered patient
   const selectedPatient = computed(() => {
     if (selectedPatientId.value) {
-      const patient = patientStore.patients.find((p) => p.id === selectedPatientId.value)
+      const patient = patientStore.patients.find((p) => p.Id == selectedPatientId.value)
 
       if (patient) {
         appointmentsForm.value.patientId = patient.id
@@ -115,7 +118,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   // Function to be called when a search result is clicked
   const selectPatient = (patient) => {
-    selectedPatientId.value = patient.id
+    selectedPatientId.value = patient.Id
     // Clear the search term to close the dropdown
     patientSearchTerm.value = ''
   }

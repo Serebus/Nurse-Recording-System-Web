@@ -5,10 +5,13 @@ import { useAuthStore } from './authStore.js'
 export const usePatientRecord = defineStore('patientRecord', () => {
   const authStore = useAuthStore()
 
-  const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
-  })
+  const getHeaders = () => {
+    const token = localStorage.getItem('token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    }
+  }
   const patientRecords = ref([])
 
   // --- API Fetching ---

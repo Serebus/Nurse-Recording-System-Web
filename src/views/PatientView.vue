@@ -65,13 +65,13 @@
 
           <div class="relative z-10 flex flex-col h-full">
             <div class="mb-4 pb-4 border-b border-gray-100">
-              <h3
-                class="text-lg font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent leading-tight break-words"
-              >
-                {{ patient.firstname }} {{ patient.middlename ? patient.middlename + ' ' : ''
-                }}{{ patient.lastname }}
-              </h3>
-              <p class="text-xs text-gray-400 mt-1">ID: #{{ patient.id }}</p>
+            <h3
+              class="text-lg font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent leading-tight break-words"
+            >
+              {{ patient.Firstname }} {{ patient.Middlename ? patient.Middlename + ' ' : ''
+              }}{{ patient.Lastname }}
+            </h3>
+              <p class="text-xs text-gray-400 mt-1">ID: #{{ patient.Id }}</p>
             </div>
 
             <div class="space-y-3 text-gray-600 text-sm mb-5 flex-1">
@@ -79,19 +79,19 @@
                 <span class="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <i class="fa-solid fa-phone text-[#2933FF]"></i>
                 </span>
-                <span class="break-words leading-relaxed">{{ patient.emergencyContact }}</span>
+                <span class="break-words leading-relaxed">{{ patient.EmergencyContact }}</span>
               </div>
               <div class="flex items-start gap-3">
                 <span class="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <i class="fa-solid fa-envelope text-[#FF5451]"></i>
                 </span>
-                <span class="break-words leading-relaxed">{{ patient.email }}</span>
+                <span class="break-words leading-relaxed">{{ patient.Email }}</span>
               </div>
               <div v-if="patient.address" class="flex items-start gap-3">
                 <span class="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <i class="fa-solid fa-location-dot text-[#2933FF]"></i>
                 </span>
-                <span class="break-words leading-relaxed">{{ patient.address }}</span>
+                <span class="break-words leading-relaxed">{{ patient.Address }}</span>
               </div>
             </div>
 
@@ -135,7 +135,7 @@
         <p class="text-gray-600 mb-6">
           Are you sure you want to delete
           <span class="font-semibold"
-            >{{ patientToDelete?.firstname }} {{ patientToDelete?.lastname }}</span
+            >{{ patientToDelete?.Firstname }} {{ patientToDelete?.Lastname }}</span
           >?
         </p>
         <div class="flex justify-end gap-3">
@@ -207,13 +207,13 @@ const cancelDelete = () => {
   showDeleteModal.value = false
 }
 
-const handleDelete = async () => {
-  if (patientToDelete.value) {
-    await store.deletePatient(patientToDelete.value.id)
-    showDeleteModal.value = false
-    patientToDelete.value = null
+  const handleDelete = async () => {
+    if (patientToDelete.value) {
+      await store.deletePatient(patientToDelete.value.Id)
+      showDeleteModal.value = false
+      patientToDelete.value = null
+    }
   }
-}
 </script>
 
 <style scoped>

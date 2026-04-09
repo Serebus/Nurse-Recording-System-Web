@@ -183,12 +183,12 @@
                   <span
                     class="text-sm font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
                   >
-                    {{ patient.firstname?.[0] || '' }}{{ patient.lastname?.[0] || '' }}
+                    {{ patient.Firstname?.[0] || '' }}{{ patient.Lastname?.[0] || '' }}
                   </span>
                 </div>
                 <div>
                   <p class="text-sm font-semibold text-gray-800">
-                    {{ patient.firstname }} {{ patient.middlename }} {{ patient.lastname }}
+                    {{ patient.Firstname }} {{ patient.Middlename }} {{ patient.Lastname }}
                   </p>
                   <p class="text-xs text-gray-500">{{ patient.emergencyContact }}</p>
                 </div>
@@ -221,27 +221,27 @@
               >
                 Selected Patient
               </h3>
-              <p class="text-xs text-gray-500">ID: {{ store.selectedPatient.id }}</p>
+                <p class="text-xs text-gray-500">ID: {{ store.selectedPatient.Id }}</p>
             </div>
           </div>
           <div class="space-y-2 text-sm">
             <div class="flex items-center gap-2">
               <i class="fa-solid fa-user text-[#2933FF] w-4"></i>
               <span class="text-gray-700"
-                ><strong>Name:</strong> {{ store.selectedPatient.firstname }}
-                {{ store.selectedPatient.middlename }} {{ store.selectedPatient.lastname }}</span
+                ><strong>Name:</strong> {{ store.selectedPatient.Firstname }}
+                {{ store.selectedPatient.Middlename }} {{ store.selectedPatient.Lastname }}</span
               >
             </div>
             <div class="flex items-center gap-2">
               <i class="fa-solid fa-phone text-[#2933FF] w-4"></i>
               <span class="text-gray-700"
-                ><strong>Contact:</strong> {{ store.selectedPatient.emergencyContact }}</span
+                ><strong>Contact:</strong> {{ store.selectedPatient.EmergencyContact }}</span
               >
             </div>
             <div class="flex items-center gap-2">
               <i class="fa-solid fa-envelope text-[#2933FF] w-4"></i>
               <span class="text-gray-700"
-                ><strong>Email:</strong> {{ store.selectedPatient.email }}</span
+                ><strong>Email:</strong> {{ store.selectedPatient.Email }}</span
               >
             </div>
           </div>
