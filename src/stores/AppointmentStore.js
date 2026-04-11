@@ -108,13 +108,41 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
       const patient = patientStore.patients.find((p) => p.Id == selectedPatientId.value)
 
       if (patient) {
-        appointmentsForm.value.patientId = patient.id
+        appointmentsForm.value.patientId = patient.Id
       }
       return patient
     }
     appointmentsForm.value.patientId = null
     return null
   })
+
+  const buildAppointmentPayload = (formData, appointmentIdOverride = null) => {
+    const patient = patientStore.patients.find((p) => p.Id == selectedPatientId.value)
+    const patientId = Number(selectedPatientId.value || formData.patientId || 0)
+
+    return {
+      Id: formData.id || 0,
+      AppointmentId: appointmentIdOverride ?? formData.appointmentId ?? '',
+      PatientId: patientId,
+      Patient: patient
+        ? {
+            Id: patient.Id,
+            Firstname: patient.Firstname ?? '',
+            Middlename: patient.Middlename ?? '',
+            Lastname: patient.Lastname ?? '',
+            Address: patient.Address ?? '',
+            Password: patient.Password ?? '',
+            Facebook: patient.Facebook ?? '',
+            Email: patient.Email ?? '',
+            EmergencyContact: patient.EmergencyContact ?? '',
+          }
+        : null,
+      Date: formData.date,
+      Time: formData.time,
+      Reason: formData.reason,
+      Status: formData.status || 'Pending',
+    }
+  }
 
   // Function to be called when a search result is clicked
   const selectPatient = (patient) => {
@@ -132,14 +160,26 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
     console.log('Selected patient ID:', newVal)
   })
 
+  const normalizeAppointment = (a) => ({
+    ...a,
+    id: a.id ?? a.Id,
+    appointmentId: a.appointmentId ?? a.AppointmentId,
+    patientId: a.patientId ?? a.PatientId,
+    date: a.date ?? a.Date,
+    time: a.time ?? a.Time,
+    reason: a.reason ?? a.Reason,
+    status: a.status ?? a.Status,
+  })
+
   const fetchAppointments = async () => {
     try {
       const response = await fetch('/api/appointments', {
         headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to fetch appointments')
-      const data = await response.json()
-      appointments.value = data
+      const apiAppointments = await response.json()
+      appointments.value = apiAppointments.map(normalizeAppointment)
+      console.log('Appointments fetched successfully')
     } catch (error) {
       console.error('Error fetching appointments:', error)
     }
@@ -150,11 +190,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
   const addAppointment = async (appointmentData) => {
     try {
       const newAppointmentId = generateAppointmentId()
-
-      const payload = {
-        ...appointmentData,
-        appointmentId: newAppointmentId,
-      }
+      const payload = buildAppointmentPayload(appointmentData, newAppointmentId)
 
       const response = await fetch('/api/appointments', {
         method: 'POST',
@@ -164,7 +200,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
       if (!response.ok) throw new Error('Failed to add appointment')
       const newAppointment = await response.json()
-      appointments.value.push(newAppointment)
+      appointments.value.push(normalizeAppointment(newAppointment))
       resetForm()
       return true
     } catch (error) {
@@ -175,18 +211,20 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const editAppointment = async (id, updatedAppointment) => {
     try {
+      const payload = buildAppointmentPayload(updatedAppointment, updatedAppointment.appointmentId)
+
       const response = await fetch(`/api/appointments/${id}`, {
         method: 'PUT',
         headers: getHeaders(),
-        body: JSON.stringify(updatedAppointment),
+        body: JSON.stringify(payload),
       })
       if (!response.ok) throw new Error('Failed to update appointment')
 
-      const updatedData = await response.json()
+      const updatedData = response.status === 204 ? { ...updatedAppointment } : await response.json()
 
-      const index = appointments.value.findIndex((a) => a.id === id)
+      const index = appointments.value.findIndex((a) => Number(a.id ?? a.Id) === Number(id))
       if (index !== -1) {
-        appointments.value[index] = updatedData
+        appointments.value[index] = normalizeAppointment(updatedData)
         resetForm()
       }
       return true
@@ -214,7 +252,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const setFormforEdit = (appointment) => {
     appointmentsForm.value = { ...appointment }
-    selectedPatientId.value = appointment.patientId
+    selectedPatientId.value = appointment.patientId ?? appointment.PatientId
 
     // Clear the search term when editing (no need to show it)
     patientSearchTerm.value = ''
@@ -227,7 +265,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
         headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete appointment')
-      appointments.value = appointments.value.filter((a) => a.id !== id)
+      appointments.value = appointments.value.filter((a) => Number(a.id ?? a.Id) !== Number(id))
       return true
     } catch (error) {
       console.error('Error deleting appointment:', error)
