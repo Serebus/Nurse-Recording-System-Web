@@ -25,7 +25,11 @@ export const usePatientStore = defineStore('patientStore', () => {
         headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to fetch patients')
-      patients.value = await response.json()
+      const apiPatients = await response.json();
+      patients.value = apiPatients.map(p => ({
+        ...p,
+        email: p.Email || p.email || ''
+      }));
       console.log('Patients fetched successfully')
     } catch (error) {
       console.error('Error fetching patients:', error)
