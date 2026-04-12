@@ -96,5 +96,9 @@
       "reason": "Trial Edit"
     }
   ],
-  "followups": []
+  "followups": [],
+  "callStatus": {
+    "isCalling": false,
+    "status": "idle"
+  }
 }
