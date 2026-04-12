@@ -1,10 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { usePatientStore } from './patientsStore'
+import { useAuthStore } from './authStore.js'
 
 export const useAppointmentStore = defineStore('appointmentStore', () => {
   const patientStore = usePatientStore()
+  const authStore = useAuthStore()
   const appointments = ref([])
+
+  const getHeaders = () => {
+    const token = localStorage.getItem('token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    }
+  }
 
   const patientSearchTerm = ref('')
   const selectedPatientId = ref(null)
@@ -72,10 +82,10 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
     return patientStore.patients.filter((patient) => {
       try {
-        const firstname = (patient.firstname || '').toLowerCase()
-        const lastname = (patient.lastname || '').toLowerCase()
-        const middlename = (patient.middlename || '').toLowerCase()
-        const contact = String(patient.emergencyContact || '')
+        const firstname = (patient.Firstname || '').toLowerCase()
+        const lastname = (patient.Lastname || '').toLowerCase()
+        const middlename = (patient.Middlename || '').toLowerCase()
+        const contact = String(patient.EmergencyContact || '')
         const fullName = `${firstname} ${middlename} ${lastname}`.toLowerCase()
 
         return (
@@ -95,10 +105,10 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
   // Computed property to get the details of the selected registered patient
   const selectedPatient = computed(() => {
     if (selectedPatientId.value) {
-      const patient = patientStore.patients.find((p) => p.id === selectedPatientId.value)
+      const patient = patientStore.patients.find((p) => p.Id == selectedPatientId.value)
 
       if (patient) {
-        appointmentsForm.value.patientId = patient.id
+        appointmentsForm.value.patientId = patient.Id
       }
       return patient
     }
@@ -106,9 +116,37 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
     return null
   })
 
+  const buildAppointmentPayload = (formData, appointmentIdOverride = null) => {
+    const patient = patientStore.patients.find((p) => p.Id == selectedPatientId.value)
+    const patientId = Number(selectedPatientId.value || formData.patientId || 0)
+
+    return {
+      Id: formData.id || 0,
+      AppointmentId: appointmentIdOverride ?? formData.appointmentId ?? '',
+      PatientId: patientId,
+      Patient: patient
+        ? {
+            Id: patient.Id,
+            Firstname: patient.Firstname ?? '',
+            Middlename: patient.Middlename ?? '',
+            Lastname: patient.Lastname ?? '',
+            Address: patient.Address ?? '',
+            Password: patient.Password ?? '',
+            Facebook: patient.Facebook ?? '',
+            Email: patient.Email ?? '',
+            EmergencyContact: patient.EmergencyContact ?? '',
+          }
+        : null,
+      Date: formData.date,
+      Time: formData.time,
+      Reason: formData.reason,
+      Status: formData.status || 'Pending',
+    }
+  }
+
   // Function to be called when a search result is clicked
   const selectPatient = (patient) => {
-    selectedPatientId.value = patient.id
+    selectedPatientId.value = patient.Id
     // Clear the search term to close the dropdown
     patientSearchTerm.value = ''
   }
@@ -122,17 +160,26 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
     console.log('Selected patient ID:', newVal)
   })
 
+  const normalizeAppointment = (a) => ({
+    ...a,
+    id: a.id ?? a.Id,
+    appointmentId: a.appointmentId ?? a.AppointmentId,
+    patientId: a.patientId ?? a.PatientId,
+    date: a.date ?? a.Date,
+    time: a.time ?? a.Time,
+    reason: a.reason ?? a.Reason,
+    status: a.status ?? a.Status,
+  })
+
   const fetchAppointments = async () => {
     try {
-      const response = await fetch('http://localhost:3000/appointments', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch('/api/appointments', {
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to fetch appointments')
-      const data = await response.json()
-      appointments.value = data
+      const apiAppointments = await response.json()
+      appointments.value = apiAppointments.map(normalizeAppointment)
+      console.log('Appointments fetched successfully')
     } catch (error) {
       console.error('Error fetching appointments:', error)
     }
@@ -143,23 +190,17 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
   const addAppointment = async (appointmentData) => {
     try {
       const newAppointmentId = generateAppointmentId()
+      const payload = buildAppointmentPayload(appointmentData, newAppointmentId)
 
-      const payload = {
-        ...appointmentData,
-        appointmentId: newAppointmentId,
-      }
-
-      const response = await fetch('http://localhost:3000/appointments', {
+      const response = await fetch('/api/appointments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) throw new Error('Failed to add appointment')
       const newAppointment = await response.json()
-      appointments.value.push(newAppointment)
+      appointments.value.push(normalizeAppointment(newAppointment))
       resetForm()
       return true
     } catch (error) {
@@ -170,20 +211,20 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const editAppointment = async (id, updatedAppointment) => {
     try {
-      const response = await fetch(`http://localhost:3000/appointments/${id}`, {
+      const payload = buildAppointmentPayload(updatedAppointment, updatedAppointment.appointmentId)
+
+      const response = await fetch(`/api/appointments/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedAppointment),
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
       })
       if (!response.ok) throw new Error('Failed to update appointment')
 
-      const updatedData = await response.json()
+      const updatedData = response.status === 204 ? { ...updatedAppointment } : await response.json()
 
-      const index = appointments.value.findIndex((a) => a.id === id)
+      const index = appointments.value.findIndex((a) => Number(a.id ?? a.Id) === Number(id))
       if (index !== -1) {
-        appointments.value[index] = updatedData
+        appointments.value[index] = normalizeAppointment(updatedData)
         resetForm()
       }
       return true
@@ -211,7 +252,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const setFormforEdit = (appointment) => {
     appointmentsForm.value = { ...appointment }
-    selectedPatientId.value = appointment.patientId
+    selectedPatientId.value = appointment.patientId ?? appointment.PatientId
 
     // Clear the search term when editing (no need to show it)
     patientSearchTerm.value = ''
@@ -219,11 +260,12 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
 
   const deleteAppointment = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/appointments/${id}`, {
+      const response = await fetch(`/api/appointments/${id}`, {
         method: 'DELETE',
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete appointment')
-      appointments.value = appointments.value.filter((a) => a.id !== id)
+      appointments.value = appointments.value.filter((a) => Number(a.id ?? a.Id) !== Number(id))
       return true
     } catch (error) {
       console.error('Error deleting appointment:', error)

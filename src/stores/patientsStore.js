@@ -1,22 +1,43 @@
 import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
+import { useAuthStore } from './authStore.js'
 
 export const usePatientStore = defineStore('patientStore', () => {
+  const authStore = useAuthStore()
   const searchterm = ref('')
   const patients = ref([])
 
+  const getHeaders = () => {
+    const token = localStorage.getItem('token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    }
+  }
+
+  watch(() => authStore.isAuthenticated, (isAuth) => {
+    if (isAuth) fetchPatients()
+  })
+
   const fetchPatients = async () => {
     try {
-      const response = await fetch('http://localhost:3000/patients')
+      const response = await fetch('/api/patients', {
+        headers: getHeaders()
+      })
       if (!response.ok) throw new Error('Failed to fetch patients')
-      patients.value = await response.json()
+      const apiPatients = await response.json();
+      patients.value = apiPatients.map(p => ({
+        ...p,
+        id: p.Id || p.id,
+        email: p.Email || p.email || ''
+      }));
       console.log('Patients fetched successfully')
     } catch (error) {
       console.error('Error fetching patients:', error)
     }
   }
 
-  fetchPatients()
+
 
   const formPatient = ref({
     id: null,
@@ -44,10 +65,11 @@ export const usePatientStore = defineStore('patientStore', () => {
     }
   }
 
-  const isEditMode = computed(() => !!formPatient.value.id)
+  const isEditMode = computed(() => !!formPatient.value.id || !!formPatient.value.Id)
 
   const setFormforEdit = (patient) => {
     formPatient.value = { ...patient }
+    formPatient.value.id = patient.Id || patient.id
   }
 
   const filteredpatients = computed(() => {
@@ -57,21 +79,35 @@ export const usePatientStore = defineStore('patientStore', () => {
     )
   })
 
+  const toPascalCase = (obj) => {
+    const pascal = {}
+    for (const [key, value] of Object.entries(obj)) {
+      const pascalKey = key.charAt(0).toUpperCase() + key.slice(1)
+      pascal[pascalKey] = value
+    }
+    // Remove Id for POST (backend auto-generates)
+    delete pascal.Id
+    return pascal
+  }
+
   const addPatient = async (newPatient) => {
     try {
-      const response = await fetch('http://localhost:3000/patients', {
+      const patientData = toPascalCase(newPatient)
+      const response = await fetch('/api/patients', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newPatient),
+        headers: getHeaders(),
+        body: JSON.stringify(patientData),
       })
-      if (!response.ok) throw new Error('Failed to add patient')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Backend error:', errorText)
+        throw new Error(`Failed to add patient: ${errorText}`)
+      }
 
       const addedPatient = await response.json()
       patients.value.push(addedPatient)
       console.log(
-        `Patient ${addedPatient.firstname} ${addedPatient.middlename} ${addedPatient.lastname} added successfully`,
+        `Patient ${addedPatient.Firstname} ${addedPatient.Middlename} ${addedPatient.Lastname} added successfully`,
       )
       return true
     } catch (error) {
@@ -81,11 +117,13 @@ export const usePatientStore = defineStore('patientStore', () => {
   }
 
   const existingPatientDetails = (newPatient) => {
+    const currentId = newPatient.id || newPatient.Id;
     const patientExist = patients.value.some(
       (p) =>
-        p.firstname === newPatient.firstname &&
-        p.lastname === newPatient.lastname &&
-        p.middlename === newPatient.middlename,
+        (p.Id !== currentId && p.id !== currentId) &&
+        (p.Firstname || p.firstname) === newPatient.firstname &&
+        (p.Lastname || p.lastname) === newPatient.lastname &&
+        (p.Middlename || p.middlename) === newPatient.middlename,
     )
     if (patientExist) {
       console.error(
@@ -98,11 +136,12 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const deletePatient = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/patients/${id}`, {
+      const response = await fetch(`/api/patients/${id}`, {
         method: 'DELETE',
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete patient')
-      patients.value = patients.value.filter((patient) => patient.id !== id)
+      patients.value = patients.value.filter((patient) => patient.Id !== id)
       console.log(`Patient with ID ${id} has been deleted`)
       return true
     } catch (error) {
@@ -113,25 +152,33 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const editPatient = async (id, updatedPatient) => {
     try {
-      const response = await fetch(`http://localhost:3000/patients/${id}`, {
+      const patientData = toPascalCase(updatedPatient)
+      patientData.Id = id // Re-add Id for PUT request since toPascalCase deletes it
+      const response = await fetch(`/api/patients/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedPatient),
+        headers: getHeaders(),
+        body: JSON.stringify(patientData),
       })
-      if (!response.ok) throw new Error('Failed to update patient')
-
-      const updatedData = await response.json()
-
-      const index = patients.value.findIndex((patient) => patient.id === id)
-      if (index !== -1) {
-        patients.value[index] = updatedData
-        console.log(`Patient with ID ${id} has been updated`)
-        resetForm()
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Backend error:', errorText)
+        throw new Error('Failed to update patient')
       }
+
+      // Check if the response actually has a body before parsing it as JSON
+      const responseText = await response.text()
+      const updatedData = responseText ? JSON.parse(responseText) : { ...patientData, id: id, email: patientData.Email || updatedPatient.email }
+
+      const index = patients.value.findIndex((patient) => patient.Id == id || patient.id == id)
+      if (index !== -1) {
+        patients.value[index] = { ...patients.value[index], ...updatedData }
+        console.log(`Patient with ID ${id} has been updated`)
+      }
+      
+      return true
     } catch (error) {
       console.error('Error updating patient:', error)
+      return false
     }
   }
 
@@ -146,7 +193,7 @@ export const usePatientStore = defineStore('patientStore', () => {
 
     let success
     if (isEditMode.value) {
-      success = await editPatient(formPatient.value.id, formPatient.value)
+      success = await editPatient(formPatient.value.id || formPatient.value.Id, formPatient.value)
     } else {
       success = await addPatient(formPatient.value)
     }

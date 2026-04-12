@@ -237,9 +237,11 @@ const filteredAppointments = computed(() => {
 })
 
 const getPatientName = (patientId) => {
-  const patient = patientStore.patients.find((p) => p.id === patientId)
+  const patient = patientStore.patients.find((p) => Number(p.id ?? p.Id) === Number(patientId))
   if (patient) {
-    return `${patient.firstname} ${patient.lastname}`
+    const first = patient.firstname ?? patient.Firstname ?? ''
+    const last = patient.lastname ?? patient.Lastname ?? ''
+    return `${first} ${last}`.trim() || 'Unknown Patient'
   }
   return 'Unknown Patient'
 }
@@ -289,7 +291,7 @@ const cancelDelete = () => {
 
 const handleDelete = async () => {
   if (appointmentToDelete.value) {
-    await store.deleteAppointment(appointmentToDelete.value.id)
+    await store.deleteAppointment(appointmentToDelete.value.id ?? appointmentToDelete.value.Id)
     showDeleteModal.value = false
     appointmentToDelete.value = null
   }

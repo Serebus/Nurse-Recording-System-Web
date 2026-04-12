@@ -1,19 +1,72 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const API_BASE_URL = 'http://localhost:3000'
+import { useAuthStore } from './authStore.js'
 
 export const usePatientRecord = defineStore('patientRecord', () => {
+  const authStore = useAuthStore()
+
+  const getHeaders = () => {
+    const token = localStorage.getItem('token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    }
+  }
   const patientRecords = ref([])
+
+  const normalizeRecord = (r) => ({
+    id: r.id ?? r.Id ?? null,
+    Id: r.Id ?? r.id ?? null,
+    recordId: r.recordId ?? r.RecordId ?? '',
+    RecordId: r.RecordId ?? r.recordId ?? '',
+    patientId: String(r.patientId ?? r.PatientId ?? ''),
+    PatientId: Number(r.PatientId ?? r.patientId ?? 0),
+    patient: r.patient ?? r.Patient ?? null,
+    Patient: r.Patient ?? r.patient ?? null,
+    date: r.date ?? r.Date ?? '',
+    Date: r.Date ?? r.date ?? '',
+    diagnosis: r.diagnosis ?? r.Diagnosis ?? '',
+    Diagnosis: r.Diagnosis ?? r.diagnosis ?? '',
+    symptom: r.symptom ?? r.Symptom ?? '',
+    Symptom: r.Symptom ?? r.symptom ?? '',
+    treatment: r.treatment ?? r.Treatment ?? '',
+    Treatment: r.Treatment ?? r.treatment ?? '',
+    notes: r.notes ?? r.Notes ?? '',
+    Notes: r.Notes ?? r.notes ?? '',
+  })
+
+  const buildRecordPayload = (record, idOverride = null) => {
+    const patientIdNum = Number(record.patientId ?? record.PatientId ?? 0)
+    const dateValue = record.Date ?? record.date ?? null
+    const diagnosis = record.Diagnosis ?? record.diagnosis ?? ''
+    const symptom = record.Symptom ?? record.symptom ?? ''
+    const treatment = record.Treatment ?? record.treatment ?? ''
+    const notes = record.Notes ?? record.notes ?? ''
+    const recordId = record.RecordId ?? record.recordId ?? ''
+    const existingPatient = record.Patient ?? record.patient ?? null
+
+    return {
+      Id: idOverride ?? Number(record.Id ?? record.id ?? 0),
+      RecordId: recordId,
+      PatientId: patientIdNum,
+      Patient: existingPatient || { Id: patientIdNum },
+      Date: dateValue,
+      Diagnosis: diagnosis,
+      Symptom: symptom,
+      Treatment: treatment,
+      Notes: notes,
+    }
+  }
 
   // --- API Fetching ---
   const fetchRecords = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/patientRecords`)
+      const response = await fetch('/api/patientrecords', {
+        headers: getHeaders()
+      })
       if (!response.ok) throw new Error('Failed to fetch patient records')
       const data = await response.json()
-      // Use the server's primary key 'id' consistently.
-      patientRecords.value = data
+      patientRecords.value = data.map(normalizeRecord)
       console.log('Patient records data fetched from API.')
     } catch (error) {
       console.error('Error fetching patient records:', error)
@@ -57,7 +110,7 @@ export const usePatientRecord = defineStore('patientRecord', () => {
 
   // This correctly filters records by the associated patientId
   const getpatient = (id) => {
-    return patientRecords.value.filter((r) => r.patientId === String(id))
+    return patientRecords.value.filter((r) => String(r.patientId ?? r.PatientId) === String(id))
   }
 
   // Helper to generate the next sequential ID (R-001, R-002, etc.)
@@ -87,38 +140,32 @@ export const usePatientRecord = defineStore('patientRecord', () => {
 
   // --- CRUD: Add Record ---
   const addRecord = async (newRecord) => {
-    const recordToPost = { ...newRecord }
-
-    // 1. Generate the human-readable ID if it's a new record
-    if (!recordToPost.recordId) {
-      recordToPost.recordId = getNextRecordId()
+    const normalized = normalizeRecord(newRecord)
+    if (!normalized.recordId) {
+      normalized.recordId = getNextRecordId()
+      normalized.RecordId = normalized.recordId
     }
 
-    // 2. Remove the 'id' field to allow the server (json-server) to auto-generate it.
-    // This is crucial for POST requests.
-    delete recordToPost.id
+    const recordToPost = buildRecordPayload(normalized, 0)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/patientRecords`, {
+      const response = await fetch('/api/patientrecords', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify(recordToPost),
       })
 
-      // Check the response status explicitly for a non-success code
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Server response error:', errorText)
         throw new Error('Failed to add record')
       }
 
-      const addedRecord = await response.json()
-
-      // Add the server-generated record (which now correctly has both 'id' and 'recordId')
+      const addedRecord = normalizeRecord(await response.json())
       patientRecords.value.push(addedRecord)
 
       console.log(
-        `Record ${addedRecord.recordId} for patient ${newRecord.patientId} added successfully.`,
+        `Record ${addedRecord.recordId || addedRecord.RecordId} for patient ${normalized.patientId} added successfully.`,
       )
       return true
     } catch (error) {
@@ -129,27 +176,22 @@ export const usePatientRecord = defineStore('patientRecord', () => {
 
   // --- CRUD: Edit Record ---
   const editRecord = async (id, updatedRecord) => {
-    const serverId = id // The id passed is the server's primary key
-
-    const recordToPut = { ...updatedRecord }
-    // Remove the 'id' property from the request body for safety
-    delete recordToPut.id
+    const serverId = Number(id)
+    const recordToPut = buildRecordPayload(updatedRecord, serverId)
 
     try {
-      // Use the server ID for the endpoint
-      const response = await fetch(`${API_BASE_URL}/patientRecords/${serverId}`, {
+      const response = await fetch(`/api/patientrecords/${serverId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify(recordToPut),
       })
       if (!response.ok) throw new Error('Failed to update record')
 
-      const updatedData = await response.json()
-
-      // Find and update the local array by 'id'
-      const index = patientRecords.value.findIndex((record) => record.id === id)
+      const index = patientRecords.value.findIndex(
+        (record) => Number(record.id ?? record.Id) === serverId
+      )
       if (index !== -1) {
-        patientRecords.value[index] = updatedData
+        patientRecords.value[index] = normalizeRecord({ ...patientRecords.value[index], ...recordToPut, id: serverId, Id: serverId })
         console.log(`Record with ID ${id} has been updated.`)
       }
       return true
@@ -164,13 +206,14 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     const serverId = id // The id passed is the server's primary key
 
     try {
-      const response = await fetch(`${API_BASE_URL}/patientRecords/${serverId}`, {
+      const response = await fetch(`/api/patientrecords/${serverId}`, {
         method: 'DELETE',
+        headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to delete record')
 
       // Filter based on the server 'id'
-      patientRecords.value = patientRecords.value.filter((record) => record.id !== id)
+      patientRecords.value = patientRecords.value.filter((record) => Number(record.id ?? record.Id) !== Number(id))
       console.log(`Record with ${id} has been deleted.`)
       return true
     } catch (error) {

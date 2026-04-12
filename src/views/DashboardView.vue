@@ -231,7 +231,7 @@ const todayDate = computed(() => {
 })
 
 const upcomingCount = computed(() => {
-  return appointmentStore.appointments.filter(a => isUpcoming(a.date)).length
+  return appointmentStore.appointments.filter((a) => isUpcoming(a.date ?? a.Date)).length
 })
 
 const statCards = computed(() => [
@@ -276,15 +276,25 @@ const statCards = computed(() => [
 const filteredDashboardPatients = computed(() => {
   if (!patientSearch.value) return patientStore.patients
   const term = patientSearch.value.toLowerCase()
-  return patientStore.patients.filter(p =>
-    `${p.firstname} ${p.middlename} ${p.lastname}`.toLowerCase().includes(term) ||
-    (p.email || '').toLowerCase().includes(term) ||
-    String(p.emergencyContact).includes(term)
-  )
+  return patientStore.patients.filter((p) => {
+    const first = p.firstname ?? p.Firstname ?? ''
+    const middle = p.middlename ?? p.Middlename ?? ''
+    const last = p.lastname ?? p.Lastname ?? ''
+    const email = p.email ?? p.Email ?? ''
+    const contact = p.emergencyContact ?? p.EmergencyContact ?? ''
+
+    return (
+      `${first} ${middle} ${last}`.toLowerCase().includes(term) ||
+      String(email).toLowerCase().includes(term) ||
+      String(contact).includes(term)
+    )
+  })
 })
 
 const sortedAppointments = computed(() => {
-  return [...appointmentStore.appointments].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10)
+  return [...appointmentStore.appointments]
+    .sort((a, b) => new Date(b.date ?? b.Date) - new Date(a.date ?? a.Date))
+    .slice(0, 10)
 })
 
 const recentRecords = computed(() => {
@@ -292,13 +302,19 @@ const recentRecords = computed(() => {
 })
 
 const getPatientName = (patientId) => {
-  const p = patientStore.patients.find(p => p.id === patientId)
-  return p ? `${p.firstname} ${p.lastname}` : 'Unknown Patient'
+  const p = patientStore.patients.find((p) => Number(p.id ?? p.Id) === Number(patientId))
+  if (!p) return 'Unknown Patient'
+  const first = p.firstname ?? p.Firstname ?? ''
+  const last = p.lastname ?? p.Lastname ?? ''
+  return `${first} ${last}`.trim() || 'Unknown Patient'
 }
 
 const getPatientNameById = (patientId) => {
-  const p = patientStore.patients.find(p => p.id === Number(patientId) || p.id === patientId)
-  return p ? `${p.firstname} ${p.lastname}` : 'Unknown Patient'
+  const p = patientStore.patients.find((p) => Number(p.id ?? p.Id) === Number(patientId))
+  if (!p) return 'Unknown Patient'
+  const first = p.firstname ?? p.Firstname ?? ''
+  const last = p.lastname ?? p.Lastname ?? ''
+  return `${first} ${last}`.trim() || 'Unknown Patient'
 }
 
 const isUpcoming = (dateStr) => {
