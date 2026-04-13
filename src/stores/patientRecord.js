@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuthStore } from './authStore.js'
 
 export const usePatientRecord = defineStore('patientRecord', () => {
@@ -73,7 +73,14 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     }
   }
 
-  fetchRecords()
+watch(
+  () => authStore.isAuthenticated,
+  (isAuth) => {
+    if (isAuth) fetchRecords()
+    else patientRecords.value = []
+  },
+  { immediate: true }
+)
 
   // Re-introduced 'recordId' as the human-readable ID
   const recordForm = ref({
