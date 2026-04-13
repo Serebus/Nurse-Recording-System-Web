@@ -11,35 +11,36 @@ export const usePatientStore = defineStore('patientStore', () => {
     const token = localStorage.getItem('token')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
 
-const fetchPatients = async () => {
-  try {
-    const response = await fetch('/api/patients', {
-      headers: getHeaders()
-    })
-    if (!response.ok) throw new Error('Failed to fetch patients')
-    const apiPatients = await response.json();
-    patients.value = apiPatients.map(p => ({
-      ...p,
-      id: p.Id || p.id,
-      email: p.Email || p.email || ''
-    }));
-    console.log('Patients fetched successfully')
-  } catch (error) {
-    console.error('Error fetching patients:', error)
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch('/api/patients', {
+        headers: getHeaders(),
+      })
+      if (!response.ok) throw new Error('Failed to fetch patients')
+      const apiPatients = await response.json()
+      patients.value = apiPatients.map((p) => ({
+        ...p,
+        id: p.Id || p.id,
+        email: p.Email || p.email || '',
+      }))
+      console.log('Patients fetched successfully')
+    } catch (error) {
+      console.error('Error fetching patients:', error)
+    }
   }
-}
 
-
-watch(() => authStore.isAuthenticated, (isAuth) => {
-  if (isAuth) fetchPatients()
-  else patients.value = []
-}, { immediate: true })
-
-
+  watch(
+    () => authStore.isAuthenticated,
+    (isAuth) => {
+      if (isAuth) fetchPatients()
+      else patients.value = []
+    },
+    { immediate: true },
+  )
 
   const formPatient = ref({
     id: null,
@@ -119,10 +120,11 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
   }
 
   const existingPatientDetails = (newPatient) => {
-    const currentId = newPatient.id || newPatient.Id;
+    const currentId = newPatient.id || newPatient.Id
     const patientExist = patients.value.some(
       (p) =>
-        (p.Id !== currentId && p.id !== currentId) &&
+        p.Id !== currentId &&
+        p.id !== currentId &&
         (p.Firstname || p.firstname) === newPatient.firstname &&
         (p.Lastname || p.lastname) === newPatient.lastname &&
         (p.Middlename || p.middlename) === newPatient.middlename,
@@ -140,7 +142,7 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
     try {
       const response = await fetch(`/api/patients/${id}`, {
         method: 'DELETE',
-        headers: getHeaders()
+        headers: getHeaders(),
       })
       if (!response.ok) throw new Error('Failed to delete patient')
       patients.value = patients.value.filter((patient) => patient.Id !== id)
@@ -169,14 +171,16 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
 
       // Check if the response actually has a body before parsing it as JSON
       const responseText = await response.text()
-      const updatedData = responseText ? JSON.parse(responseText) : { ...patientData, id: id, email: patientData.Email || updatedPatient.email }
+      const updatedData = responseText
+        ? JSON.parse(responseText)
+        : { ...patientData, id: id, email: patientData.Email || updatedPatient.email }
 
       const index = patients.value.findIndex((patient) => patient.Id == id || patient.id == id)
       if (index !== -1) {
         patients.value[index] = { ...patients.value[index], ...updatedData }
         console.log(`Patient with ID ${id} has been updated`)
       }
-      
+
       return true
     } catch (error) {
       console.error('Error updating patient:', error)

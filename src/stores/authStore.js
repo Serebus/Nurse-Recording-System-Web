@@ -2,11 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useAuthStore = defineStore('authStore', () => {
-const storedNurse = localStorage.getItem('nurse')
+  const storedNurse = localStorage.getItem('nurse')
   const storedToken = localStorage.getItem('token')
   const nurse = ref(storedNurse ? JSON.parse(storedNurse) : null)
   const token = ref(storedToken || null)
-
 
   const formLogin = ref({
     email: '',
@@ -41,8 +40,8 @@ const storedNurse = localStorage.getItem('nurse')
         token.value = tokenFromResponse
         localStorage.setItem('token', tokenFromResponse)
         const nurseData = data.user?.nurse || data.user || null
-nurse.value = nurseData
-localStorage.setItem('nurse', JSON.stringify(nurseData))
+        nurse.value = nurseData
+        localStorage.setItem('nurse', JSON.stringify(nurseData))
         localStorage.setItem('nurse', JSON.stringify(nurse.value))
         localStorage.setItem('nurseId', data.user?.nurseDetails?.nurseId || nurse.value?.Id)
         console.log('Login success')

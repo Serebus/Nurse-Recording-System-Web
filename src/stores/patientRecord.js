@@ -9,7 +9,7 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     const token = localStorage.getItem('token')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
   const patientRecords = ref([])
@@ -62,7 +62,7 @@ export const usePatientRecord = defineStore('patientRecord', () => {
   const fetchRecords = async () => {
     try {
       const response = await fetch('/api/patientrecords', {
-        headers: getHeaders()
+        headers: getHeaders(),
       })
       if (!response.ok) throw new Error('Failed to fetch patient records')
       const data = await response.json()
@@ -73,14 +73,14 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     }
   }
 
-watch(
-  () => authStore.isAuthenticated,
-  (isAuth) => {
-    if (isAuth) fetchRecords()
-    else patientRecords.value = []
-  },
-  { immediate: true }
-)
+  watch(
+    () => authStore.isAuthenticated,
+    (isAuth) => {
+      if (isAuth) fetchRecords()
+      else patientRecords.value = []
+    },
+    { immediate: true },
+  )
 
   // Re-introduced 'recordId' as the human-readable ID
   const recordForm = ref({
@@ -195,10 +195,15 @@ watch(
       if (!response.ok) throw new Error('Failed to update record')
 
       const index = patientRecords.value.findIndex(
-        (record) => Number(record.id ?? record.Id) === serverId
+        (record) => Number(record.id ?? record.Id) === serverId,
       )
       if (index !== -1) {
-        patientRecords.value[index] = normalizeRecord({ ...patientRecords.value[index], ...recordToPut, id: serverId, Id: serverId })
+        patientRecords.value[index] = normalizeRecord({
+          ...patientRecords.value[index],
+          ...recordToPut,
+          id: serverId,
+          Id: serverId,
+        })
         console.log(`Record with ID ${id} has been updated.`)
       }
       return true
@@ -215,12 +220,14 @@ watch(
     try {
       const response = await fetch(`/api/patientrecords/${serverId}`, {
         method: 'DELETE',
-        headers: getHeaders()
+        headers: getHeaders(),
       })
       if (!response.ok) throw new Error('Failed to delete record')
 
       // Filter based on the server 'id'
-      patientRecords.value = patientRecords.value.filter((record) => Number(record.id ?? record.Id) !== Number(id))
+      patientRecords.value = patientRecords.value.filter(
+        (record) => Number(record.id ?? record.Id) !== Number(id),
+      )
       console.log(`Record with ${id} has been deleted.`)
       return true
     } catch (error) {

@@ -5,7 +5,6 @@
       class="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 font-poppins"
     >
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100 p-8">
-
         <!-- Pulse icon -->
         <div
           class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 transition-all duration-500"
@@ -80,7 +79,6 @@
             Close
           </button>
         </div>
-
       </div>
     </div>
   </Teleport>
@@ -117,23 +115,33 @@ const badgeClass = computed(() => ({
   'bg-blue-100 text-blue-700': callState.value === 'ended',
 }))
 
-const badgeText = computed(() => ({
-  calling: 'Incoming call',
-  coming: 'On my way',
-  ended: 'Call ended',
-}[callState.value] ?? ''))
+const badgeText = computed(
+  () =>
+    ({
+      calling: 'Incoming call',
+      coming: 'On my way',
+      ended: 'Call ended',
+    })[callState.value] ?? '',
+)
 
-const titleText = computed(() => ({
-  calling: 'Patient is calling!',
-  coming: "Marked as coming",
-  ended: 'Buzzer stopped',
-}[callState.value] ?? ''))
+const titleText = computed(
+  () =>
+    ({
+      calling: 'Patient is calling!',
+      coming: 'Marked as coming',
+      ended: 'Buzzer stopped',
+    })[callState.value] ?? '',
+)
 
-const messageText = computed(() => ({
-  calling: "Someone pressed the call button. Tap \"I'm coming\" to notify the patient you're on your way.",
-  coming: 'Patient notified. Buzzer stays active until you end the call below.',
-  ended: 'Call has been ended. The Arduino buzzer will stop.',
-}[callState.value] ?? ''))
+const messageText = computed(
+  () =>
+    ({
+      calling:
+        'Someone pressed the call button. Tap "I\'m coming" to notify the patient you\'re on your way.',
+      coming: 'Patient notified. Buzzer stays active until you end the call below.',
+      ended: 'Call has been ended. The Arduino buzzer will stop.',
+    })[callState.value] ?? '',
+)
 
 // --- Actions ---
 
@@ -159,30 +167,28 @@ async function tryEndCall() {
   await patchStatus({ status: 'ended', isCalling: false })
 }
 
-
-
 async function closeModal() {
   await patchStatus({ status: 'idle', isCalling: false })
 }
 
 // --- Polling ---
 
-async function poll(){
-    try{
-        const res = await fetch(`${API}/callStatus`)
-        const data = await res.json()
+async function poll() {
+  try {
+    const res = await fetch(`${API}/callStatus`)
+    const data = await res.json()
 
-        callState.value = data.status
+    callState.value = data.status
 
-        if(data.isCalling || data.status === 'ended'){
-            visible.value = true
-        } else if(data.status === 'idle'){
-            visible.value = false
-            endInput.value = ''
-        }
-    } catch (e){
-        console.error("Server sync failed", e)
+    if (data.isCalling || data.status === 'ended') {
+      visible.value = true
+    } else if (data.status === 'idle') {
+      visible.value = false
+      endInput.value = ''
     }
+  } catch (e) {
+    console.error('Server sync failed', e)
+  }
 }
 
 onMounted(() => {

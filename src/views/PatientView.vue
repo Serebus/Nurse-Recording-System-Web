@@ -65,12 +65,12 @@
 
           <div class="relative z-10 flex flex-col h-full">
             <div class="mb-4 pb-4 border-b border-gray-100">
-            <h3
-              class="text-lg font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent leading-tight break-words"
-            >
-              {{ patient.Firstname }} {{ patient.Middlename ? patient.Middlename + ' ' : ''
-              }}{{ patient.Lastname }}
-            </h3>
+              <h3
+                class="text-lg font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent leading-tight break-words"
+              >
+                {{ patient.Firstname }} {{ patient.Middlename ? patient.Middlename + ' ' : ''
+                }}{{ patient.Lastname }}
+              </h3>
               <p class="text-xs text-gray-400 mt-1">ID: #{{ patient.Id }}</p>
             </div>
 
@@ -207,13 +207,13 @@ const cancelDelete = () => {
   showDeleteModal.value = false
 }
 
-  const handleDelete = async () => {
-    if (patientToDelete.value) {
-      await store.deletePatient(patientToDelete.value.Id)
-      showDeleteModal.value = false
-      patientToDelete.value = null
-    }
+const handleDelete = async () => {
+  if (patientToDelete.value) {
+    await store.deletePatient(patientToDelete.value.Id)
+    showDeleteModal.value = false
+    patientToDelete.value = null
   }
+}
 </script>
 
 <style scoped>

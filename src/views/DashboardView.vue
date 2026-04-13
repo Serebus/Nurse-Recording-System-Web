@@ -14,7 +14,9 @@
           </span>
           👋
         </h1>
-        <p class="text-gray-500 text-sm">Here's what's happening at the clinic today — {{ todayDate }}</p>
+        <p class="text-gray-500 text-sm">
+          Here's what's happening at the clinic today — {{ todayDate }}
+        </p>
       </div>
 
       <!-- Stats Row -->
@@ -45,7 +47,6 @@
 
       <!-- Two column layout -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
         <!-- Patients list (2/3 width) -->
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-white p-6">
           <div class="flex items-center justify-between mb-6">
@@ -54,7 +55,9 @@
               <p class="text-xs text-gray-400 mt-0.5">Click a patient to view their records</p>
             </div>
             <div class="relative">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <i
+                class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"
+              ></i>
               <input
                 v-model="patientSearch"
                 type="text"
@@ -65,7 +68,9 @@
           </div>
 
           <div v-if="filteredDashboardPatients.length === 0" class="text-center py-10">
-            <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+            <div
+              class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"
+            >
               <i class="fa-solid fa-user-slash text-gray-400 text-xl"></i>
             </div>
             <p class="text-gray-500 text-sm">No patients found</p>
@@ -78,18 +83,27 @@
               @click="goToRecords(patient.id)"
               class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-[#2933FF]/30 hover:bg-gradient-to-r hover:from-[#2933FF]/5 hover:to-[#FF5451]/5 cursor-pointer transition-all group"
             >
-              <div class="w-11 h-11 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
+              <div
+                class="w-11 h-11 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm"
+              >
                 {{ patient.firstname?.[0] }}{{ patient.lastname?.[0] }}
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-gray-800 text-sm truncate group-hover:text-[#2933FF] transition-colors">
-                  {{ patient.firstname }} {{ patient.middlename ? patient.middlename + ' ' : '' }}{{ patient.lastname }}
+                <p
+                  class="font-semibold text-gray-800 text-sm truncate group-hover:text-[#2933FF] transition-colors"
+                >
+                  {{ patient.firstname }} {{ patient.middlename ? patient.middlename + ' ' : ''
+                  }}{{ patient.lastname }}
                 </p>
-                <p class="text-xs text-gray-400 truncate">{{ patient.email || 'No email provided' }}</p>
+                <p class="text-xs text-gray-400 truncate">
+                  {{ patient.email || 'No email provided' }}
+                </p>
               </div>
               <div class="flex-shrink-0 flex flex-col items-end gap-1">
                 <span class="text-xs text-gray-400">{{ patient.emergencyContact }}</span>
-                <span class="text-xs font-semibold text-[#2933FF] opacity-0 group-hover:opacity-100 transition-opacity">
+                <span
+                  class="text-xs font-semibold text-[#2933FF] opacity-0 group-hover:opacity-100 transition-opacity"
+                >
                   View records →
                 </span>
               </div>
@@ -113,7 +127,9 @@
           </div>
 
           <div v-if="appointmentStore.appointments.length === 0" class="text-center py-10">
-            <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+            <div
+              class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"
+            >
               <i class="fa-solid fa-calendar-xmark text-gray-400 text-xl"></i>
             </div>
             <p class="text-gray-500 text-sm">No appointments scheduled</p>
@@ -129,7 +145,11 @@
                 <p class="text-sm font-semibold text-gray-800 leading-tight">{{ appt.reason }}</p>
                 <span
                   class="text-xs font-bold px-2 py-0.5 rounded-full ml-2 flex-shrink-0"
-                  :class="isUpcoming(appt.date) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                  :class="
+                    isUpcoming(appt.date)
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-500'
+                  "
                 >
                   {{ isUpcoming(appt.date) ? 'Upcoming' : 'Past' }}
                 </span>
@@ -156,7 +176,9 @@
         </div>
 
         <div v-if="recordStore.patientRecords.length === 0" class="text-center py-10">
-          <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+          <div
+            class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"
+          >
             <i class="fa-solid fa-folder-open text-gray-400 text-xl"></i>
           </div>
           <p class="text-gray-500 text-sm">No records yet</p>
@@ -171,18 +193,26 @@
           >
             <div class="flex items-start justify-between mb-3">
               <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center">
+                <div
+                  class="w-8 h-8 rounded-lg bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center"
+                >
                   <i class="fa-solid fa-stethoscope text-xs text-[#2933FF]"></i>
                 </div>
                 <div>
-                  <p class="text-sm font-bold text-gray-800 group-hover:text-[#2933FF] transition-colors">{{ record.diagnosis || 'No diagnosis' }}</p>
+                  <p
+                    class="text-sm font-bold text-gray-800 group-hover:text-[#2933FF] transition-colors"
+                  >
+                    {{ record.diagnosis || 'No diagnosis' }}
+                  </p>
                   <p class="text-xs text-gray-400">{{ record.recordId }}</p>
                 </div>
               </div>
             </div>
             <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ record.symptom }}</p>
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-[#2933FF]">{{ getPatientNameById(record.patientId) }}</span>
+              <span class="text-xs font-semibold text-[#2933FF]">{{
+                getPatientNameById(record.patientId)
+              }}</span>
               <span class="text-xs text-gray-400">{{ formatDate(record.date) }}</span>
             </div>
           </div>
@@ -227,7 +257,12 @@ const timeOfDay = computed(() => {
 })
 
 const todayDate = computed(() => {
-  return new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 })
 
 const upcomingCount = computed(() => {
@@ -298,7 +333,9 @@ const sortedAppointments = computed(() => {
 })
 
 const recentRecords = computed(() => {
-  return [...recordStore.patientRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6)
+  return [...recordStore.patientRecords]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 6)
 })
 
 const getPatientName = (patientId) => {
@@ -324,7 +361,11 @@ const isUpcoming = (dateStr) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 const formatTime = (timeString) => {
@@ -343,9 +384,17 @@ const goToRecords = (id) => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
 
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #2933FF, #FF5451); border-radius: 10px; }
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #2933ff, #ff5451);
+  border-radius: 10px;
+}
 
 .line-clamp-2 {
   display: -webkit-box;

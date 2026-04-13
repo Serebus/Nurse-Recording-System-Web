@@ -221,7 +221,7 @@
               >
                 Selected Patient
               </h3>
-                <p class="text-xs text-gray-500">ID: {{ store.selectedPatient.Id }}</p>
+              <p class="text-xs text-gray-500">ID: {{ store.selectedPatient.Id }}</p>
             </div>
           </div>
           <div class="space-y-2 text-sm">

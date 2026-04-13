@@ -12,7 +12,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
     const token = localStorage.getItem('token')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
 
@@ -174,7 +174,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
   const fetchAppointments = async () => {
     try {
       const response = await fetch('/api/appointments', {
-        headers: getHeaders()
+        headers: getHeaders(),
       })
       if (!response.ok) throw new Error('Failed to fetch appointments')
       const apiAppointments = await response.json()
@@ -186,13 +186,13 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
   }
 
   watch(
-  () => authStore.isAuthenticated,
-  (isAuth) => {
-    if (isAuth) fetchAppointments()
-    else appointments.value = []
-  },
-  { immediate: true }
-)
+    () => authStore.isAuthenticated,
+    (isAuth) => {
+      if (isAuth) fetchAppointments()
+      else appointments.value = []
+    },
+    { immediate: true },
+  )
 
   const addAppointment = async (appointmentData) => {
     try {
@@ -227,7 +227,8 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
       })
       if (!response.ok) throw new Error('Failed to update appointment')
 
-      const updatedData = response.status === 204 ? { ...updatedAppointment } : await response.json()
+      const updatedData =
+        response.status === 204 ? { ...updatedAppointment } : await response.json()
 
       const index = appointments.value.findIndex((a) => Number(a.id ?? a.Id) === Number(id))
       if (index !== -1) {
@@ -269,7 +270,7 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
     try {
       const response = await fetch(`/api/appointments/${id}`, {
         method: 'DELETE',
-        headers: getHeaders()
+        headers: getHeaders(),
       })
       if (!response.ok) throw new Error('Failed to delete appointment')
       appointments.value = appointments.value.filter((a) => Number(a.id ?? a.Id) !== Number(id))

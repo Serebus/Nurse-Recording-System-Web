@@ -65,7 +65,10 @@
           />
         </div>
 
-        <div v-if="filteredRecords.length === 0" class="text-center py-12 bg-white rounded-2xl shadow-sm">
+        <div
+          v-if="filteredRecords.length === 0"
+          class="text-center py-12 bg-white rounded-2xl shadow-sm"
+        >
           <div
             class="w-20 h-20 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center mx-auto mb-4"
           >
@@ -192,7 +195,9 @@
                     class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-100"
                   >
                     <i class="fa-solid fa-rotate-right mr-1 text-emerald-500"></i>
-                    {{ getFollowupCount(record.id) }} follow-up{{ getFollowupCount(record.id) !== 1 ? 's' : '' }}
+                    {{ getFollowupCount(record.id) }} follow-up{{
+                      getFollowupCount(record.id) !== 1 ? 's' : ''
+                    }}
                   </span>
                 </div>
 
@@ -229,7 +234,8 @@
         </div>
         <p class="text-gray-600 mb-6">
           Are you sure you want to delete the record for
-          <span class="font-semibold">{{ recordToDelete?.diagnosis }}</span>?
+          <span class="font-semibold">{{ recordToDelete?.diagnosis }}</span
+          >?
         </p>
         <div class="flex justify-end gap-3">
           <button
@@ -300,7 +306,7 @@ const filteredRecords = computed(() => {
 
 const getFollowupCount = (recordId) => {
   return followupStore.followups.filter(
-    f => String(f.patientId) === String(patientId) && String(f.recordId) === String(recordId)
+    (f) => String(f.patientId) === String(patientId) && String(f.recordId) === String(recordId),
   ).length
 }
 

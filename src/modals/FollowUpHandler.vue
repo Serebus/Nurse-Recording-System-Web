@@ -3,16 +3,22 @@
     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-poppins"
     @click.self="closeModal"
   >
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-auto border border-gray-100">
+    <div
+      class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-auto border border-gray-100"
+    >
       <!-- Header -->
       <div class="sticky top-0 bg-white border-b border-gray-100 p-6 rounded-t-2xl z-10">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent">
+            <h2
+              class="text-2xl font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
+            >
               {{ store.isEditMode ? 'Edit Follow-up' : 'New Follow-up' }}
             </h2>
             <p class="text-sm text-gray-500 mt-1">
-              {{ store.isEditMode ? 'Update follow-up details below' : 'Record a new follow-up visit' }}
+              {{
+                store.isEditMode ? 'Update follow-up details below' : 'Record a new follow-up visit'
+              }}
             </p>
           </div>
           <button
