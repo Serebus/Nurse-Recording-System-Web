@@ -40,7 +40,9 @@ const storedNurse = localStorage.getItem('nurse')
       if (tokenFromResponse) {
         token.value = tokenFromResponse
         localStorage.setItem('token', tokenFromResponse)
-        nurse.value = data.user?.nurse || data.user
+        const nurseData = data.user?.nurse || data.user || null
+nurse.value = nurseData
+localStorage.setItem('nurse', JSON.stringify(nurseData))
         localStorage.setItem('nurse', JSON.stringify(nurse.value))
         localStorage.setItem('nurseId', data.user?.nurseDetails?.nurseId || nurse.value?.Id)
         console.log('Login success')
