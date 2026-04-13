@@ -15,27 +15,29 @@ export const usePatientStore = defineStore('patientStore', () => {
     }
   }
 
-  watch(() => authStore.isAuthenticated, (isAuth) => {
-    if (isAuth) fetchPatients()
-  })
-
-  const fetchPatients = async () => {
-    try {
-      const response = await fetch('/api/patients', {
-        headers: getHeaders()
-      })
-      if (!response.ok) throw new Error('Failed to fetch patients')
-      const apiPatients = await response.json();
-      patients.value = apiPatients.map(p => ({
-        ...p,
-        id: p.Id || p.id,
-        email: p.Email || p.email || ''
-      }));
-      console.log('Patients fetched successfully')
-    } catch (error) {
-      console.error('Error fetching patients:', error)
-    }
+const fetchPatients = async () => {
+  try {
+    const response = await fetch('/api/patients', {
+      headers: getHeaders()
+    })
+    if (!response.ok) throw new Error('Failed to fetch patients')
+    const apiPatients = await response.json();
+    patients.value = apiPatients.map(p => ({
+      ...p,
+      id: p.Id || p.id,
+      email: p.Email || p.email || ''
+    }));
+    console.log('Patients fetched successfully')
+  } catch (error) {
+    console.error('Error fetching patients:', error)
   }
+}
+
+
+watch(() => authStore.isAuthenticated, (isAuth) => {
+  if (isAuth) fetchPatients()
+  else patients.value = []
+}, { immediate: true })
 
 
 
