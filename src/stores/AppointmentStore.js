@@ -185,7 +185,14 @@ export const useAppointmentStore = defineStore('appointmentStore', () => {
     }
   }
 
-  fetchAppointments()
+  watch(
+  () => authStore.isAuthenticated,
+  (isAuth) => {
+    if (isAuth) fetchAppointments()
+    else appointments.value = []
+  },
+  { immediate: true }
+)
 
   const addAppointment = async (appointmentData) => {
     try {
