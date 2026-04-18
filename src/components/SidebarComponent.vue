@@ -107,11 +107,21 @@ const navigationItems = [
 ]
 
 const userName = computed(() => {
-  return authStore?.nurse?.username || 'Nurse User'
+  const nurse = authStore?.nurse
+  return (
+    nurse?.username ||
+    nurse?.Username ||
+    nurse?.name ||
+    [nurse?.firstname || nurse?.Firstname, nurse?.lastname || nurse?.Lastname]
+      .filter(Boolean)
+      .join(' ') ||
+    'Nurse User'
+  )
 })
 
 const userEmail = computed(() => {
-  return authStore?.nurse?.email || 'nurse@aclc.com'
+  const nurse = authStore?.nurse
+  return nurse?.email || nurse?.Email || 'nurse@aclc.com'
 })
 
 const userInitials = computed(() => {
