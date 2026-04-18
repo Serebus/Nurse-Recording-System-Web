@@ -90,6 +90,12 @@ export const usePatientStore = defineStore('patientStore', () => {
     return pascal
   }
 
+  const normalizePatient = (p) => ({
+    ...p,
+    id: p.Id || p.id,
+    email: p.Email || p.email || ''
+  })
+
   const addPatient = async (newPatient) => {
     try {
       const patientData = toPascalCase(newPatient)
@@ -104,10 +110,11 @@ export const usePatientStore = defineStore('patientStore', () => {
         throw new Error(`Failed to add patient: ${errorText}`)
       }
 
-      const addedPatient = await response.json()
+      const addedPatientRaw = await response.json()
+      const addedPatient = normalizePatient(addedPatientRaw)
       patients.value.push(addedPatient)
       console.log(
-        `Patient ${addedPatient.Firstname} ${addedPatient.Middlename} ${addedPatient.Lastname} added successfully`,
+        `Patient ${addedPatient.firstname || addedPatient.Firstname} ${addedPatient.middlename || addedPatient.Middlename} ${addedPatient.lastname || addedPatient.Lastname} added successfully`,
       )
       return true
     } catch (error) {
@@ -228,6 +235,11 @@ export const usePatientStore = defineStore('patientStore', () => {
       return false
     }
     return true
+  }
+
+  // Fetch patients on store initialization (for reload scenarios)
+  if (!patients.value.length) {
+    fetchPatients()
   }
 
   return {
