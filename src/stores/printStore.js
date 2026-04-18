@@ -47,8 +47,11 @@ export const usePrintStore = defineStore('printStore', () => {
   // Format patient full name
   const patientFullName = computed(() => {
     if (!patient.value) return 'Unknown Patient'
-    const { firstname, middlename, lastname } = patient.value
-    return `${firstname} ${middlename ? middlename + ' ' : ''}${lastname}`
+    const p = patient.value
+    const first = p.firstname || p.Firstname || ''
+    const middle = p.middlename || p.Middlename || ''
+    const last = p.lastname || p.Lastname || ''
+    return `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || 'Unknown Patient'
   })
 
   // Set data for printing
