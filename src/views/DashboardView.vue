@@ -336,6 +336,10 @@ const formatTime = (timeString) => {
 }
 
 const goToRecords = (id) => {
+  if (!id) {
+    console.warn('Cannot navigate to patient records: missing patient ID')
+    return
+  }
   router.push({ name: 'patientrecords', params: { id } })
 }
 </script>
