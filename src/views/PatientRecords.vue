@@ -1,11 +1,8 @@
 <template>
   <div class="min-h-screen flex font-poppins bg-[#F0F2FF] text-gray-900">
-    <!-- Sidebar -->
     <SidebarComponent />
 
-    <!-- Main Content -->
     <div class="main flex-1 ml-[280px] p-10 overflow-auto">
-      <!-- Back Button -->
       <button
         @click="goBack"
         class="mb-6 px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:shadow-md transition-all flex items-center gap-2 text-sm"
@@ -20,13 +17,13 @@
             <div
               class="w-16 h-16 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center text-white text-2xl font-bold shadow-lg"
             >
-              {{ patient?.firstname?.[0] }}{{ patient?.lastname?.[0] }}
+              {{ patientInitials }}
             </div>
             <div>
               <h2
                 class="text-3xl font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
               >
-                {{ patient?.firstname }} {{ patient?.lastname }}
+                {{ patientFullName }}
               </h2>
               <p class="text-gray-500 text-sm mt-1">Patient Medical Records · #{{ patientId }}</p>
             </div>
@@ -61,7 +58,7 @@
             type="text"
             v-model="searchQuery"
             placeholder="Search records..."
-            class="w-full pl-14 pr-6 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:shadow-xl bg-white text-gray-800 placeholder-gray-400 transition-all duration-300 border border-gray-100"
+            class="w-full pl-14 pr-6 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 bg-white text-gray-800 placeholder-gray-400 transition-all duration-300 border border-gray-100"
           />
         </div>
 
@@ -83,33 +80,59 @@
           <div
             v-for="record in filteredRecords"
             :key="record.id"
-            class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 duration-300 border border-gray-100 group relative overflow-hidden cursor-pointer"
+            class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 duration-300 border group relative overflow-hidden cursor-pointer"
+            :class="record.closed ? 'border-gray-300 opacity-80' : 'border-gray-100'"
             @click="goToFollowup(record)"
           >
+            <div
+              v-if="record.closed"
+              class="absolute inset-0 bg-gray-50/50 pointer-events-none z-0"
+            ></div>
             <div
               class="absolute inset-0 bg-gradient-to-br from-[#2933FF]/5 to-[#FF5451]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             ></div>
 
             <div class="relative z-10 p-6">
               <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
                   <span
-                    class="w-10 h-10 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center"
+                    class="w-10 h-10 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center flex-shrink-0"
                   >
                     <i
                       class="fa-solid fa-stethoscope text-sm bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
                     ></i>
                   </span>
-                  <div>
+                  <div class="min-w-0">
                     <h2
-                      class="text-xl font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
+                      class="text-xl font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent truncate"
                     >
-                      {{ record.diagnosis }}
+                      {{ record.diagnosis || 'No diagnosis' }}
                     </h2>
                     <p class="text-xs text-gray-400 mt-0.5">{{ record.recordId }}</p>
                   </div>
                 </div>
-                <div class="flex gap-2" @click.stop>
+                <div class="flex gap-1.5 ml-1 flex-shrink-0" @click.stop>
+                  <span
+                    v-if="record.closed"
+                    class="self-center text-xs font-bold px-2 py-1 rounded-full bg-gray-200 text-gray-600"
+                  >
+                    Closed
+                  </span>
+                  <button
+                    @click="handleToggleClosed(record)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95"
+                    :class="record.closed ? 'bg-green-50' : 'bg-orange-50'"
+                    :title="record.closed ? 'Reopen Record' : 'Close Record'"
+                  >
+                    <i
+                      class="text-xs"
+                      :class="
+                        record.closed
+                          ? 'fa-solid fa-lock-open text-green-600'
+                          : 'fa-solid fa-lock text-orange-500'
+                      "
+                    ></i>
+                  </button>
                   <button
                     @click="printSingleRecord(record.id)"
                     class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95"
@@ -119,7 +142,8 @@
                   </button>
                   <button
                     @click="handleEdit(record)"
-                    class="w-8 h-8 rounded-lg bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95"
+                    :disabled="record.closed"
+                    class="w-8 h-8 rounded-lg bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                     title="Edit Record"
                   >
                     <i
@@ -190,20 +214,36 @@
                     </span>
                     <p class="text-xs text-gray-500">{{ formatDate(record.date) }}</p>
                   </div>
-                  <!-- Follow-up count badge -->
                   <span
-                    class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-100"
+                    class="text-xs font-semibold px-2.5 py-1 rounded-full border"
+                    :class="
+                      record.closed
+                        ? 'bg-gray-100 text-gray-500 border-gray-200'
+                        : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-100'
+                    "
                   >
-                    <i class="fa-solid fa-rotate-right mr-1 text-emerald-500"></i>
-                    {{ getFollowupCount(record.id) }} follow-up{{
-                      getFollowupCount(record.id) !== 1 ? 's' : ''
-                    }}
+                    <i
+                      class="mr-1 text-xs"
+                      :class="
+                        record.closed
+                          ? 'fa-solid fa-ban text-gray-400'
+                          : 'fa-solid fa-rotate-right text-emerald-500'
+                      "
+                    ></i>
+                    <span v-if="record.closed">No new follow-ups</span>
+                    <span v-else>
+                      {{ getFollowupCount(record.id) }} follow-up{{
+                        getFollowupCount(record.id) !== 1 ? 's' : ''
+                      }}
+                    </span>
                   </span>
                 </div>
 
-                <!-- CTA hint -->
                 <div class="opacity-0 group-hover:opacity-100 transition-opacity pt-1">
-                  <p class="text-xs text-center text-[#2933FF] font-semibold">
+                  <p v-if="record.closed" class="text-xs text-center text-gray-400 font-semibold">
+                    Record is closed — click lock icon to reopen
+                  </p>
+                  <p v-else class="text-xs text-center text-[#2933FF] font-semibold">
                     Click to view details &amp; follow-ups →
                   </p>
                 </div>
@@ -214,7 +254,6 @@
       </div>
     </div>
 
-    <!-- Records Handler Modal -->
     <RecordsHandler v-if="showRecordModal" @modalClose="closeRecordModal" />
 
     <!-- Delete Confirmation Modal -->
@@ -234,8 +273,7 @@
         </div>
         <p class="text-gray-600 mb-6">
           Are you sure you want to delete the record for
-          <span class="font-semibold">{{ recordToDelete?.diagnosis }}</span
-          >?
+          <span class="font-semibold">{{ recordToDelete?.diagnosis }}</span>?
         </p>
         <div class="flex justify-end gap-3">
           <button
@@ -283,60 +321,63 @@ const showRecordModal = ref(false)
 const showDeleteModal = ref(false)
 const recordToDelete = ref(null)
 
-const patient = computed(() => {
-  return patientsStore.patients.find((p) => p.id === patientId)
+/** Find the patient with normalized fields */
+const patient = computed(() =>
+  patientsStore.patients.find((p) => Number(p.id ?? p.Id) === patientId),
+)
+
+/** Full name built from normalized camelCase fields */
+const patientFullName = computed(() => {
+  if (!patient.value) return `Patient #${patientId}`
+  const { firstname, middlename, lastname } = patient.value
+  return [firstname, middlename, lastname].filter(Boolean).join(' ')
 })
 
-const records = computed(() => {
-  return patientRecord.getpatient(patientId)
+/** Initials for the avatar */
+const patientInitials = computed(() => {
+  if (!patient.value) return '?'
+  const f = patient.value.firstname?.[0] ?? ''
+  const l = patient.value.lastname?.[0] ?? ''
+  return (f + l).toUpperCase() || '?'
 })
+
+const records = computed(() => patientRecord.getpatient(patientId))
 
 const filteredRecords = computed(() => {
   if (!searchQuery.value) return records.value
   const query = searchQuery.value.toLowerCase()
   return records.value.filter(
-    (record) =>
-      record.diagnosis?.toLowerCase().includes(query) ||
-      record.symptom?.toLowerCase().includes(query) ||
-      record.treatment?.toLowerCase().includes(query) ||
-      record.notes?.toLowerCase().includes(query) ||
-      record.recordId?.toLowerCase().includes(query),
+    (r) =>
+      r.diagnosis?.toLowerCase().includes(query) ||
+      r.symptom?.toLowerCase().includes(query) ||
+      r.treatment?.toLowerCase().includes(query) ||
+      r.notes?.toLowerCase().includes(query) ||
+      r.recordId?.toLowerCase().includes(query),
   )
 })
 
-const getFollowupCount = (recordId) => {
-  return followupStore.followups.filter(
+const getFollowupCount = (recordId) =>
+  followupStore.followups.filter(
     (f) => String(f.patientId) === String(patientId) && String(f.recordId) === String(recordId),
   ).length
-}
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-}
-
-const goBack = () => {
-  router.push({ name: 'home' })
-}
-
-const goToFollowup = (record) => {
-  router.push({
-    name: 'record',
-    params: {
-      patientId: patientId,
-      recordId: record.id,
-    },
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
 }
 
-const printAllRecords = () => {
-  router.push({ name: 'printview', params: { patientId: patientId } })
-}
+const goBack = () => router.push({ name: 'home' })
 
-const printSingleRecord = (recordId) => {
-  router.push({ name: 'printview', params: { patientId: patientId, recordId: recordId } })
-}
+const goToFollowup = (record) =>
+  router.push({ name: 'record', params: { patientId, recordId: record.id } })
+
+const printAllRecords = () => router.push({ name: 'printview', params: { patientId } })
+const printSingleRecord = (recordId) =>
+  router.push({ name: 'printview', params: { patientId, recordId } })
 
 const openAddRecordModal = () => {
   patientRecord.resetRecordForm()
@@ -344,12 +385,17 @@ const openAddRecordModal = () => {
 }
 
 const handleEdit = (record) => {
+  if (record.closed) return
   patientRecord.setFormforEdit(record)
   showRecordModal.value = true
 }
 
 const closeRecordModal = () => {
   showRecordModal.value = false
+}
+
+const handleToggleClosed = async (record) => {
+  await patientRecord.toggleRecordClosed(record)
 }
 
 const confirmDelete = (record) => {
@@ -373,7 +419,6 @@ const handleDelete = async () => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
