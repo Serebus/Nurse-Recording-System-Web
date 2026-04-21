@@ -15,18 +15,45 @@ export const usePatientStore = defineStore('patientStore', () => {
     }
   }
 
+  /**
+   * Normalize a patient from the API into a consistent shape that has BOTH
+   * camelCase and PascalCase keys so every part of the UI works regardless
+   * of which casing it references.
+   */
+  const normalizePatient = (p) => ({
+    // Internal numeric id (always available)
+    id: p.Id ?? p.id ?? null,
+    Id: p.Id ?? p.id ?? null,
+
+    // Name fields — both casings
+    firstname: p.Firstname ?? p.firstname ?? '',
+    Firstname: p.Firstname ?? p.firstname ?? '',
+    middlename: p.Middlename ?? p.middlename ?? '',
+    Middlename: p.Middlename ?? p.middlename ?? '',
+    lastname: p.Lastname ?? p.lastname ?? '',
+    Lastname: p.Lastname ?? p.lastname ?? '',
+
+    // Contact / identity
+    email: p.Email ?? p.email ?? '',
+    Email: p.Email ?? p.email ?? '',
+    address: p.Address ?? p.address ?? '',
+    Address: p.Address ?? p.address ?? '',
+    facebook: p.Facebook ?? p.facebook ?? '',
+    Facebook: p.Facebook ?? p.facebook ?? '',
+    emergencyContact: p.EmergencyContact ?? p.emergencyContact ?? '',
+    EmergencyContact: p.EmergencyContact ?? p.emergencyContact ?? '',
+
+    // Auth (never sent back to UI, just kept for store completeness)
+    password: p.Password ?? p.password ?? '',
+    Password: p.Password ?? p.password ?? '',
+  })
+
   const fetchPatients = async () => {
     try {
-      const response = await fetch('/api/patients', {
-        headers: getHeaders(),
-      })
+      const response = await fetch('/api/patients', { headers: getHeaders() })
       if (!response.ok) throw new Error('Failed to fetch patients')
       const apiPatients = await response.json()
-      patients.value = apiPatients.map((p) => ({
-        ...p,
-        id: p.Id || p.id,
-        email: p.Email || p.email || '',
-      }))
+      patients.value = apiPatients.map(normalizePatient)
       console.log('Patients fetched successfully')
     } catch (error) {
       console.error('Error fetching patients:', error)
@@ -51,7 +78,7 @@ export const usePatientStore = defineStore('patientStore', () => {
     password: '',
     facebook: '',
     email: '',
-    emergencyContact: ''.toString(),
+    emergencyContact: '',
   })
 
   const resetForm = () => {
@@ -68,50 +95,70 @@ export const usePatientStore = defineStore('patientStore', () => {
     }
   }
 
-  const isEditMode = computed(() => !!formPatient.value.id || !!formPatient.value.Id)
+  const isEditMode = computed(() => !!(formPatient.value.id || formPatient.value.Id))
 
   const setFormforEdit = (patient) => {
-    formPatient.value = { ...patient }
-    formPatient.value.id = patient.Id || patient.id
+    formPatient.value = {
+      id: patient.Id ?? patient.id,
+      Id: patient.Id ?? patient.id,
+      firstname: patient.Firstname ?? patient.firstname ?? '',
+      middlename: patient.Middlename ?? patient.middlename ?? '',
+      lastname: patient.Lastname ?? patient.lastname ?? '',
+      address: patient.Address ?? patient.address ?? '',
+      password: patient.Password ?? patient.password ?? '',
+      facebook: patient.Facebook ?? patient.facebook ?? '',
+      email: patient.Email ?? patient.email ?? '',
+      emergencyContact: patient.EmergencyContact ?? patient.emergencyContact ?? '',
+    }
   }
 
   const filteredpatients = computed(() => {
     const term = searchterm.value.toLowerCase()
-    return patients.value.filter((patient) =>
-      Object.values(patient).some((val) => String(val).toLowerCase().includes(term)),
-    )
+    if (!term) return patients.value
+    return patients.value.filter((patient) => {
+      const fullName = `${patient.firstname} ${patient.middlename} ${patient.lastname}`.toLowerCase()
+      return (
+        fullName.includes(term) ||
+        String(patient.email).toLowerCase().includes(term) ||
+        String(patient.emergencyContact).toLowerCase().includes(term) ||
+        String(patient.address).toLowerCase().includes(term)
+      )
+    })
   })
 
-  const toPascalCase = (obj) => {
-    const pascal = {}
-    for (const [key, value] of Object.entries(obj)) {
-      const pascalKey = key.charAt(0).toUpperCase() + key.slice(1)
-      pascal[pascalKey] = value
+  /** Build PascalCase payload for the API */
+  const buildPayload = (patient, includeId = false) => {
+    const payload = {
+      Firstname: patient.firstname ?? '',
+      Middlename: patient.middlename ?? '',
+      Lastname: patient.lastname ?? '',
+      Address: patient.address ?? '',
+      Password: patient.password ?? '',
+      Facebook: patient.facebook ?? '',
+      Email: patient.email ?? '',
+      EmergencyContact: String(patient.emergencyContact ?? ''),
     }
-    // Remove Id for POST (backend auto-generates)
-    delete pascal.Id
-    return pascal
+    if (includeId) {
+      payload.Id = patient.id ?? patient.Id
+    }
+    return payload
   }
 
   const addPatient = async (newPatient) => {
     try {
-      const patientData = toPascalCase(newPatient)
       const response = await fetch('/api/patients', {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify(patientData),
+        body: JSON.stringify(buildPayload(newPatient, false)),
       })
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Backend error:', errorText)
         throw new Error(`Failed to add patient: ${errorText}`)
       }
-
       const addedPatient = await response.json()
-      patients.value.push(addedPatient)
-      console.log(
-        `Patient ${addedPatient.Firstname} ${addedPatient.Middlename} ${addedPatient.Lastname} added successfully`,
-      )
+      patients.value.push(normalizePatient(addedPatient))
+      console.log(`Patient ${addedPatient.Firstname} ${addedPatient.Lastname} added`)
       return true
     } catch (error) {
       console.error('Error adding patient:', error)
@@ -120,19 +167,16 @@ export const usePatientStore = defineStore('patientStore', () => {
   }
 
   const existingPatientDetails = (newPatient) => {
-    const currentId = newPatient.id || newPatient.Id
+    const currentId = newPatient.id ?? newPatient.Id
     const patientExist = patients.value.some(
       (p) =>
-        p.Id !== currentId &&
-        p.id !== currentId &&
-        (p.Firstname || p.firstname) === newPatient.firstname &&
-        (p.Lastname || p.lastname) === newPatient.lastname &&
-        (p.Middlename || p.middlename) === newPatient.middlename,
+        (p.id !== currentId) &&
+        p.firstname?.toLowerCase() === newPatient.firstname?.toLowerCase() &&
+        p.lastname?.toLowerCase() === newPatient.lastname?.toLowerCase() &&
+        p.middlename?.toLowerCase() === newPatient.middlename?.toLowerCase(),
     )
     if (patientExist) {
-      console.error(
-        `Patient ${newPatient.firstname} ${newPatient.middlename} ${newPatient.lastname} already exist`,
-      )
+      console.error(`Patient ${newPatient.firstname} ${newPatient.lastname} already exists`)
       return false
     }
     return true
@@ -145,8 +189,8 @@ export const usePatientStore = defineStore('patientStore', () => {
         headers: getHeaders(),
       })
       if (!response.ok) throw new Error('Failed to delete patient')
-      patients.value = patients.value.filter((patient) => patient.Id !== id)
-      console.log(`Patient with ID ${id} has been deleted`)
+      patients.value = patients.value.filter((p) => p.id !== id && p.Id !== id)
+      console.log(`Patient with ID ${id} deleted`)
       return true
     } catch (error) {
       console.error('Error deleting patient:', error)
@@ -156,12 +200,11 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const editPatient = async (id, updatedPatient) => {
     try {
-      const patientData = toPascalCase(updatedPatient)
-      patientData.Id = id // Re-add Id for PUT request since toPascalCase deletes it
+      const payload = buildPayload(updatedPatient, true)
       const response = await fetch(`/api/patients/${id}`, {
         method: 'PUT',
         headers: getHeaders(),
-        body: JSON.stringify(patientData),
+        body: JSON.stringify(payload),
       })
       if (!response.ok) {
         const errorText = await response.text()
@@ -169,18 +212,14 @@ export const usePatientStore = defineStore('patientStore', () => {
         throw new Error('Failed to update patient')
       }
 
-      // Check if the response actually has a body before parsing it as JSON
       const responseText = await response.text()
-      const updatedData = responseText
-        ? JSON.parse(responseText)
-        : { ...patientData, id: id, email: patientData.Email || updatedPatient.email }
+      const updatedData = responseText ? normalizePatient(JSON.parse(responseText)) : normalizePatient({ ...payload, Id: id })
 
-      const index = patients.value.findIndex((patient) => patient.Id == id || patient.id == id)
+      const index = patients.value.findIndex((p) => p.id == id || p.Id == id)
       if (index !== -1) {
-        patients.value[index] = { ...patients.value[index], ...updatedData }
-        console.log(`Patient with ID ${id} has been updated`)
+        patients.value[index] = updatedData
+        console.log(`Patient with ID ${id} updated`)
       }
-
       return true
     } catch (error) {
       console.error('Error updating patient:', error)
@@ -199,7 +238,7 @@ export const usePatientStore = defineStore('patientStore', () => {
 
     let success
     if (isEditMode.value) {
-      success = await editPatient(formPatient.value.id || formPatient.value.Id, formPatient.value)
+      success = await editPatient(formPatient.value.id ?? formPatient.value.Id, formPatient.value)
     } else {
       success = await addPatient(formPatient.value)
     }
@@ -209,28 +248,25 @@ export const usePatientStore = defineStore('patientStore', () => {
 
   const emailVerification = (patient) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
     if (isEditMode.value) return true
-
-    const emailExist = patients.value.some((p) => p.email === patient.email)
-
+    const emailExist = patients.value.some(
+      (p) => p.email && p.email === patient.email,
+    )
     if (patient.email && emailExist) {
-      console.error(`Patient email ${patient.email} is already in use`)
+      console.error(`Email ${patient.email} already in use`)
       return false
     }
     if (patient.email && !emailRegex.test(patient.email)) {
-      console.error(`Patient Email ${patient.email} is not a valid format`)
+      console.error(`Email ${patient.email} invalid format`)
       return false
     }
     return true
   }
 
   const phoneVerification = (newPatient) => {
-    const phoneNumber = String(newPatient.emergencyContact)
+    const phoneNumber = String(newPatient.emergencyContact ?? '')
     if (phoneNumber.length !== 11) {
-      console.error(
-        `Patient phone number: ${newPatient.emergencyContact} should be 11 characters long`,
-      )
+      console.error(`Phone number should be 11 digits, got: ${phoneNumber}`)
       return false
     }
     return true
@@ -246,5 +282,7 @@ export const usePatientStore = defineStore('patientStore', () => {
     setFormforEdit,
     submitPatient,
     resetForm,
+    fetchPatients,
+    normalizePatient,
   }
 })
