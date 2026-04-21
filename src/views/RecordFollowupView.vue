@@ -13,28 +13,55 @@
       </button>
 
       <!-- Patient Header -->
-      <div v-if="patient" class="bg-white rounded-2xl shadow-sm border border-white p-6 mb-6 flex items-center gap-5">
-        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center text-white text-2xl font-bold shadow-lg flex-shrink-0">
+      <div
+        v-if="patient"
+        class="bg-white rounded-2xl shadow-sm border border-white p-6 mb-6 flex items-center gap-5"
+      >
+        <div
+          class="w-16 h-16 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center text-white text-2xl font-bold shadow-lg flex-shrink-0"
+        >
           {{ patient.firstname?.[0] }}{{ patient.lastname?.[0] }}
         </div>
         <div>
-          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent">
-            {{ patient.firstname }} {{ patient.middlename ? patient.middlename + ' ' : '' }}{{ patient.lastname }}
+          <h1
+            class="text-2xl font-extrabold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
+          >
+            {{ patient.firstname }} {{ patient.middlename ? patient.middlename + ' ' : ''
+            }}{{ patient.lastname }}
           </h1>
-          <p class="text-sm text-gray-400 mt-0.5">Patient ID: #{{ patient.id }} · {{ patient.email || 'No email' }}</p>
+          <p class="text-sm text-gray-400 mt-0.5">
+            Patient ID: #{{ patient.id }} · {{ patient.email || 'No email' }}
+          </p>
         </div>
       </div>
 
       <!-- Record Detail Card -->
-      <div v-if="record" class="bg-white rounded-2xl shadow-sm border border-white p-8 mb-6">
+      <div v-if="record" class="bg-white rounded-2xl shadow-sm border border-white p-8 mb-6"
+        :class="record.closed ? 'border-gray-200' : ''"
+      >
         <div class="flex items-start justify-between mb-6">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center shadow-md">
+            <div
+              class="w-12 h-12 rounded-xl bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center shadow-md"
+            >
               <i class="fa-solid fa-stethoscope text-white text-lg"></i>
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900">{{ record.diagnosis || 'No Diagnosis' }}</h2>
-              <p class="text-xs text-gray-400 mt-0.5 font-mono">{{ record.recordId }} · {{ formatDate(record.date) }}</p>
+              <div class="flex items-center gap-2">
+                <h2 class="text-2xl font-bold text-gray-900">
+                  {{ record.diagnosis || 'No Diagnosis' }}
+                </h2>
+                <!-- Closed badge -->
+                <span
+                  v-if="record.closed"
+                  class="text-xs font-bold px-2 py-1 rounded-full bg-gray-200 text-gray-600"
+                >
+                  <i class="fa-solid fa-lock mr-1 text-xs"></i>Closed
+                </span>
+              </div>
+              <p class="text-xs text-gray-400 mt-0.5 font-mono">
+                {{ record.recordId }} · {{ formatDate(record.date) }}
+              </p>
             </div>
           </div>
           <div class="flex gap-2">
@@ -56,46 +83,63 @@
         <!-- Record Fields -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="record-field">
-            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
+            <p
+              class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2"
+            >
               <i class="fa-solid fa-user-injured text-[#2933FF]"></i> Symptoms
             </p>
             <div class="bg-[#F8F9FF] rounded-xl p-4 border border-[#E8EAFF]">
-              <p class="text-sm text-gray-700 leading-relaxed">{{ record.symptom || 'Not specified' }}</p>
+              <p class="text-sm text-gray-700 leading-relaxed">
+                {{ record.symptom || 'Not specified' }}
+              </p>
             </div>
           </div>
 
           <div class="record-field">
-            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
+            <p
+              class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2"
+            >
               <i class="fa-solid fa-stethoscope text-[#2933FF]"></i> Diagnosis
             </p>
             <div class="bg-[#F8F9FF] rounded-xl p-4 border border-[#E8EAFF]">
-              <p class="text-sm text-gray-700 leading-relaxed">{{ record.diagnosis || 'Not specified' }}</p>
+              <p class="text-sm text-gray-700 leading-relaxed">
+                {{ record.diagnosis || 'Not specified' }}
+              </p>
             </div>
           </div>
 
           <div class="record-field">
-            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
+            <p
+              class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2"
+            >
               <i class="fa-solid fa-pills text-[#FF5451]"></i> Treatment
             </p>
             <div class="bg-[#FFF8F8] rounded-xl p-4 border border-[#FFE8E8]">
-              <p class="text-sm text-gray-700 leading-relaxed">{{ record.treatment || 'Not specified' }}</p>
+              <p class="text-sm text-gray-700 leading-relaxed">
+                {{ record.treatment || 'Not specified' }}
+              </p>
             </div>
           </div>
 
           <div class="record-field">
-            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
+            <p
+              class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2"
+            >
               <i class="fa-solid fa-notes-medical text-[#FF5451]"></i> Notes
             </p>
             <div class="bg-[#FFF8F8] rounded-xl p-4 border border-[#FFE8E8]">
-              <p class="text-sm text-gray-700 leading-relaxed">{{ record.notes || 'No additional notes' }}</p>
+              <p class="text-sm text-gray-700 leading-relaxed">
+                {{ record.notes || 'No additional notes' }}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- No Record Found -->
       <div v-else class="bg-white rounded-2xl shadow-sm border border-white p-12 mb-6 text-center">
-        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+        <div
+          class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4"
+        >
           <i class="fa-solid fa-folder-open text-gray-400 text-2xl"></i>
         </div>
         <p class="text-gray-500">Record not found</p>
@@ -103,20 +147,36 @@
 
       <!-- Follow-ups Section -->
       <div class="bg-white rounded-2xl shadow-sm border border-white p-8">
-        <!-- Follow-up header -->
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center shadow-sm">
-              <i class="fa-solid fa-rotate-right text-white text-sm"></i>
+            <div
+              class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+              :class="record?.closed ? 'bg-gray-200' : 'bg-gradient-to-r from-emerald-500 to-teal-500'"
+            >
+              <i
+                class="text-sm"
+                :class="record?.closed ? 'fa-solid fa-lock text-gray-500' : 'fa-solid fa-rotate-right text-white'"
+              ></i>
             </div>
             <div>
               <h3 class="text-xl font-bold text-gray-900">Follow-up Records</h3>
               <p class="text-xs text-gray-400">
-                {{ recordFollowups.length }} follow-up{{ recordFollowups.length !== 1 ? 's' : '' }} for this record
+                {{ recordFollowups.length }} follow-up{{
+                  recordFollowups.length !== 1 ? 's' : ''
+                }}
+                for this record
               </p>
             </div>
           </div>
+
+          <!-- Add follow-up — disabled when record is closed -->
+          <div v-if="record?.closed" class="flex items-center gap-2">
+            <span class="text-xs text-gray-400 font-medium">
+              <i class="fa-solid fa-lock mr-1"></i>Record closed — no new follow-ups allowed
+            </span>
+          </div>
           <button
+            v-else
             @click="openAddFollowupModal"
             class="px-5 py-2.5 bg-gradient-to-r from-[#2933FF] to-[#FF5451] text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
           >
@@ -127,16 +187,28 @@
 
         <!-- Timeline of followups -->
         <div v-if="recordFollowups.length === 0" class="text-center py-12">
-          <div class="w-16 h-16 rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center justify-center mx-auto mb-4">
-            <i class="fa-solid fa-rotate-right text-emerald-500 text-2xl"></i>
+          <div
+            class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            :class="record?.closed ? 'bg-gray-100' : 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10'"
+          >
+            <i
+              class="text-2xl"
+              :class="record?.closed ? 'fa-solid fa-lock text-gray-400' : 'fa-solid fa-rotate-right text-emerald-500'"
+            ></i>
           </div>
           <p class="text-gray-500 text-sm">No follow-ups recorded yet</p>
-          <p class="text-gray-400 text-xs mt-1">Click "Add Follow-up" to record a follow-up visit</p>
+          <p v-if="!record?.closed" class="text-gray-400 text-xs mt-1">
+            Click "Add Follow-up" to record a follow-up visit
+          </p>
+          <p v-else class="text-gray-400 text-xs mt-1">
+            Reopen the record from the records list to add follow-ups
+          </p>
         </div>
 
         <div v-else class="relative">
-          <!-- Timeline line -->
-          <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#2933FF] to-[#FF5451] opacity-20 z-0"></div>
+          <div
+            class="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#2933FF] to-[#FF5451] opacity-20 z-0"
+          ></div>
 
           <div class="space-y-6">
             <div
@@ -144,23 +216,30 @@
               :key="followup.id"
               class="relative pl-16"
             >
-              <!-- Timeline dot -->
-              <div class="absolute left-4 top-5 w-5 h-5 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] shadow-md z-10 flex items-center justify-center">
+              <div
+                class="absolute left-4 top-5 w-5 h-5 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] shadow-md z-10 flex items-center justify-center"
+              >
                 <div class="w-2 h-2 rounded-full bg-white"></div>
               </div>
 
-              <!-- Follow-up card -->
-              <div class="bg-[#F8F9FF] rounded-2xl border border-[#E8EAFF] p-6 hover:shadow-md transition-all group">
+              <div
+                class="bg-[#F8F9FF] rounded-2xl border border-[#E8EAFF] p-6 hover:shadow-md transition-all group"
+              >
                 <div class="flex items-start justify-between mb-4">
                   <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#2933FF] bg-[#2933FF]/10 px-2 py-1 rounded-full">
+                    <span
+                      class="text-xs font-bold uppercase tracking-wider text-[#2933FF] bg-[#2933FF]/10 px-2 py-1 rounded-full"
+                    >
                       Follow-up #{{ index + 1 }}
                     </span>
                     <p class="text-xs text-gray-400 mt-2">
                       <i class="fa-solid fa-calendar mr-1"></i>{{ formatDate(followup.date) }}
                     </p>
                   </div>
-                  <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div
+                    v-if="!record?.closed"
+                    class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
                     <button
                       @click="editFollowup(followup)"
                       class="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:shadow-sm transition-all"
@@ -179,32 +258,31 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div v-if="followup.symptom || followup.new_symptom">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Symptoms</p>
-                    <p class="text-sm text-gray-700">{{ followup.symptom }}</p>
-                    <p v-if="followup.new_symptom" class="text-sm text-orange-600 mt-1">
-                      <span class="text-xs font-bold uppercase text-orange-500">New: </span>{{ followup.new_symptom }}
+                  <div v-if="followup.new_symptom">
+                    <p class="text-xs font-bold text-orange-500 uppercase tracking-wide mb-1">
+                      Updated Symptom
                     </p>
+                    <p class="text-sm text-gray-700">{{ followup.new_symptom }}</p>
                   </div>
 
-                  <div v-if="followup.diagnosis || followup.new_diagnostic">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Diagnosis</p>
-                    <p class="text-sm text-gray-700">{{ followup.diagnosis }}</p>
-                    <p v-if="followup.new_diagnostic" class="text-sm text-orange-600 mt-1">
-                      <span class="text-xs font-bold uppercase text-orange-500">Updated: </span>{{ followup.new_diagnostic }}
+                  <div v-if="followup.new_diagnostic">
+                    <p class="text-xs font-bold text-orange-500 uppercase tracking-wide mb-1">
+                      Updated Diagnosis
                     </p>
+                    <p class="text-sm text-gray-700">{{ followup.new_diagnostic }}</p>
                   </div>
 
-                  <div v-if="followup.treatment || followup.additional_treatment">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Treatment</p>
-                    <p class="text-sm text-gray-700">{{ followup.treatment }}</p>
-                    <p v-if="followup.additional_treatment" class="text-sm text-emerald-600 mt-1">
-                      <span class="text-xs font-bold uppercase text-emerald-500">Additional: </span>{{ followup.additional_treatment }}
+                  <div v-if="followup.additional_treatment">
+                    <p class="text-xs font-bold text-emerald-500 uppercase tracking-wide mb-1">
+                      Additional Treatment
                     </p>
+                    <p class="text-sm text-gray-700">{{ followup.additional_treatment }}</p>
                   </div>
 
                   <div v-if="followup.notes">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Notes</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">
+                      Notes
+                    </p>
                     <p class="text-sm text-gray-700 italic">{{ followup.notes }}</p>
                   </div>
                 </div>
@@ -215,7 +293,6 @@
       </div>
     </div>
 
-    <!-- Follow-up Modal -->
     <FollowupModal
       v-if="showFollowupModal"
       :patientId="route.params.patientId"
@@ -225,7 +302,6 @@
       @saved="handleFollowupSaved"
     />
 
-    <!-- Delete Confirm -->
     <div
       v-if="showDeleteFollowupModal"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-poppins"
@@ -242,10 +318,16 @@
         </div>
         <p class="text-gray-600 mb-6">Are you sure you want to delete this follow-up record?</p>
         <div class="flex justify-end gap-3">
-          <button @click="cancelDeleteFollowup" class="px-6 py-3 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all">
+          <button
+            @click="cancelDeleteFollowup"
+            class="px-6 py-3 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all"
+          >
             Cancel
           </button>
-          <button @click="handleDeleteFollowup" class="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg transition-all">
+          <button
+            @click="handleDeleteFollowup"
+            class="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg transition-all"
+          >
             Delete
           </button>
         </div>
@@ -283,40 +365,43 @@ const followupToDelete = ref(null)
 const patientId = computed(() => Number(route.params.patientId))
 const recordId = computed(() => Number(route.params.recordId))
 
-const patient = computed(() => patientStore.patients.find(p => p.id === patientId.value))
+const patient = computed(() => patientStore.patients.find((p) => p.id === patientId.value))
 
-const record = computed(() => {
-  return recordStore.patientRecords.find(r => r.id === recordId.value)
-})
+const record = computed(() =>
+  recordStore.patientRecords.find((r) => r.id === recordId.value),
+)
 
-const recordFollowups = computed(() => {
-  return followupStore.followups.filter(
-    f => String(f.patientId) === String(patientId.value) && String(f.recordId) === String(recordId.value)
-  )
-})
+const recordFollowups = computed(() =>
+  followupStore.followups.filter(
+    (f) =>
+      String(f.patientId) === String(patientId.value) &&
+      String(f.recordId) === String(recordId.value),
+  ),
+)
 
-const sortedFollowups = computed(() => {
-  return [...recordFollowups.value].sort((a, b) => new Date(b.date) - new Date(a.date))
-})
+const sortedFollowups = computed(() =>
+  [...recordFollowups.value].sort((a, b) => new Date(b.date) - new Date(a.date)),
+)
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
-const goBack = () => {
-  router.push({ name: 'patientrecords', params: { id: patientId.value } })
-}
+const goBack = () => router.push({ name: 'patientrecords', params: { id: patientId.value } })
 
-const printRecord = () => {
+const printRecord = () =>
   router.push({ name: 'printview', params: { patientId: patientId.value, recordId: recordId.value } })
-}
 
-const openRecommendation = () => {
+const openRecommendation = () =>
   router.push({ name: 'recommendation', params: { patientId: patientId.value, recordId: recordId.value } })
-}
 
 const openAddFollowupModal = () => {
+  if (record.value?.closed) return
   selectedFollowup.value = null
   followupStore.resetFollowupForm()
   followupStore.FollowupForm.patientId = String(patientId.value)
@@ -326,6 +411,7 @@ const openAddFollowupModal = () => {
 }
 
 const editFollowup = (followup) => {
+  if (record.value?.closed) return
   selectedFollowup.value = followup
   followupStore.setFormforEdit(followup)
   showFollowupModal.value = true

@@ -30,11 +30,10 @@ export const useFollowupStore = defineStore('followupStore', () => {
   })
 
   const buildFollowupPayload = (data, idOverride = null) => {
-    const patientId = Number(data.patientId ?? data.PatientId ?? data.patient?.id ?? data.Patient?.Id ?? 0)
-    const patient =
-      data.patient ??
-      data.Patient ??
-      (patientId ? { Id: patientId } : null)
+    const patientId = Number(
+      data.patientId ?? data.PatientId ?? data.patient?.id ?? data.Patient?.Id ?? 0,
+    )
+    const patient = data.patient ?? data.Patient ?? (patientId ? { Id: patientId } : null)
 
     return {
       Id: idOverride ?? data.id ?? data.Id ?? 0,
@@ -86,7 +85,7 @@ export const useFollowupStore = defineStore('followupStore', () => {
       if (isAuth) fetchFollowups()
       else followups.value = []
     },
-    { immediate: true }
+    { immediate: true },
   )
 
   const FollowupForm = ref({
@@ -165,7 +164,9 @@ export const useFollowupStore = defineStore('followupStore', () => {
     }
   }
 
-  const isEditMode = computed(() => FollowupForm.value.id !== null && FollowupForm.value.id !== undefined)
+  const isEditMode = computed(
+    () => FollowupForm.value.id !== null && FollowupForm.value.id !== undefined,
+  )
 
   const setFormforEdit = (followup) => {
     FollowupForm.value = { ...normalizeFollowup(followup) }

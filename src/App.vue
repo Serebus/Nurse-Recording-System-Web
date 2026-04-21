@@ -4,6 +4,6 @@ import NurseCallModal from '@/components/NurseCallModal.vue'
 
 <template>
   <header></header>
-  <NurseCallModal />  
+  <NurseCallModal />
   <RouterView />
 </template>

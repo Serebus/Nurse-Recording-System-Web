@@ -7,7 +7,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
 
   const getHeaders = () => ({
     'Content-Type': 'application/json',
-    ...(authStore.getToken && { 'Authorization': `Bearer ${authStore.getToken.value}` })
+    ...(authStore.getToken && { Authorization: `Bearer ${authStore.getToken.value}` }),
   })
   const stats = ref({
     totalPatients: 0,
@@ -20,7 +20,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
   const fetchStats = async () => {
     try {
       const response = await fetch('/api/dashboard/stats', {
-        headers: getHeaders()
+        headers: getHeaders(),
       })
       if (!response.ok) throw new Error('Failed to fetch dashboard stats')
       const data = await response.json()
