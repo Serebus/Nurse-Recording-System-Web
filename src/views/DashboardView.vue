@@ -146,12 +146,12 @@
                 <span
                   class="text-xs font-bold px-2 py-0.5 rounded-full ml-2 flex-shrink-0"
                   :class="
-                    isUpcoming(appt.date)
+                    isUpcoming(appt)
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-500'
                   "
                 >
-                  {{ isUpcoming(appt.date) ? 'Upcoming' : 'Past' }}
+                  {{ isUpcoming(appt) ? 'Upcoming' : 'Past' }}
                 </span>
               </div>
               <p class="text-xs text-[#2933FF] font-medium mb-1">
@@ -266,7 +266,7 @@ const todayDate = computed(() => {
 })
 
 const upcomingCount = computed(() => {
-  return appointmentStore.appointments.filter((a) => isUpcoming(a.date ?? a.Date)).length
+  return appointmentStore.appointments.filter((a) => isUpcoming(a)).length
 })
 
 const statCards = computed(() => [
@@ -354,9 +354,9 @@ const getPatientNameById = (patientId) => {
   return `${first} ${last}`.trim() || 'Unknown Patient'
 }
 
-const isUpcoming = (dateStr) => {
-  if (!dateStr) return false
-  return new Date(dateStr) >= new Date(new Date().toDateString())
+const isUpcoming = (appointment) => {
+  if (!appointment) return false
+  return appointment.status !== 'Closed' && appointment.Status !== 'Closed'
 }
 
 const formatDate = (dateString) => {
@@ -377,6 +377,10 @@ const formatTime = (timeString) => {
 }
 
 const goToRecords = (id) => {
+  if (!id) {
+    console.warn('Cannot navigate to patient records: missing patient ID')
+    return
+  }
   router.push({ name: 'patientrecords', params: { id } })
 }
 </script>

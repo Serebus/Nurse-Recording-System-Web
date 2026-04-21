@@ -272,6 +272,11 @@ export const usePatientStore = defineStore('patientStore', () => {
     return true
   }
 
+  // Fetch patients on store initialization (for reload scenarios)
+  if (!patients.value.length) {
+    fetchPatients()
+  }
+
   return {
     searchterm,
     patients,

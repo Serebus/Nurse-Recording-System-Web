@@ -267,18 +267,7 @@ const appointmentToDelete = ref(null)
  * Falls back to date-only comparison if time is missing.
  */
 const isExpired = (appointment) => {
-  const dateStr = appointment.date ?? appointment.Date
-  const timeStr = appointment.time ?? appointment.Time
-  if (!dateStr) return false
-  try {
-    // Build a full ISO string, padding seconds if needed
-    const isoStr = timeStr
-      ? `${dateStr}T${timeStr.length === 5 ? timeStr + ':00' : timeStr}`
-      : `${dateStr}T23:59:59`
-    return new Date(isoStr) < new Date()
-  } catch {
-    return false
-  }
+  return appointment.status === 'Closed' || appointment.Status === 'Closed'
 }
 
 const getPatientName = (patientId) => {
