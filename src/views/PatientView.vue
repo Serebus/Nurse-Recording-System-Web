@@ -1,9 +1,7 @@
 <template>
   <div class="min-h-screen flex font-poppins bg-gray-50 text-gray-900">
-    <!-- Sidebar -->
     <SidebarComponent />
 
-    <!-- Main Content -->
     <div class="main flex-1 ml-[280px] p-10 overflow-auto">
       <div class="flex items-center justify-between mb-10 gap-6">
         <div>
@@ -14,7 +12,6 @@
           </h1>
           <p class="text-gray-500">Manage and view all registered patients</p>
         </div>
-
         <button
           @click="openAddPatientModal"
           class="px-8 py-4 bg-gradient-to-r from-[#2933FF] to-[#FF5451] text-white rounded-full shadow-md hover:shadow-xl transition-all font-semibold whitespace-nowrap flex items-center gap-2"
@@ -24,7 +21,6 @@
         </button>
       </div>
 
-      <!-- Search Bar -->
       <div class="search flex-1 relative max-w-3xl mb-10">
         <div class="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none">
           <i class="fa-solid fa-magnifying-glass text-gray-400 text-lg"></i>
@@ -37,7 +33,6 @@
         />
       </div>
 
-      <!-- Patient Cards Grid -->
       <div
         v-if="store.filteredpatients.length === 0"
         class="text-center py-12 bg-white rounded-2xl shadow-lg"
@@ -52,7 +47,7 @@
         <p class="text-gray-500 text-lg">No patients found</p>
       </div>
 
-      <div class="content grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+      <div class="content grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="patient in store.filteredpatients"
           :key="patient.id"
@@ -65,13 +60,14 @@
 
           <div class="relative z-10 flex flex-col h-full">
             <div class="mb-4 pb-4 border-b border-gray-100">
+              <!-- Name uses camelCase (normalized by store) -->
               <h3
                 class="text-lg font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent leading-tight break-words"
               >
-                {{ patient.Firstname }} {{ patient.Middlename ? patient.Middlename + ' ' : ''
-                }}{{ patient.Lastname }}
+                {{ patient.firstname }}
+                {{ patient.middlename ? patient.middlename + ' ' : '' }}{{ patient.lastname }}
               </h3>
-              <p class="text-xs text-gray-400 mt-1">ID: #{{ patient.Id }}</p>
+              <p class="text-xs text-gray-400 mt-1">ID: #{{ patient.id }}</p>
             </div>
 
             <div class="space-y-3 text-gray-600 text-sm mb-5 flex-1">
@@ -79,19 +75,19 @@
                 <span class="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <i class="fa-solid fa-phone text-[#2933FF]"></i>
                 </span>
-                <span class="break-words leading-relaxed">{{ patient.EmergencyContact }}</span>
+                <span class="break-words leading-relaxed">{{ patient.emergencyContact }}</span>
               </div>
               <div class="flex items-start gap-3">
                 <span class="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <i class="fa-solid fa-envelope text-[#FF5451]"></i>
                 </span>
-                <span class="break-words leading-relaxed">{{ patient.Email }}</span>
+                <span class="break-words leading-relaxed">{{ patient.email || '—' }}</span>
               </div>
               <div v-if="patient.address" class="flex items-start gap-3">
                 <span class="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <i class="fa-solid fa-location-dot text-[#2933FF]"></i>
                 </span>
-                <span class="break-words leading-relaxed">{{ patient.Address }}</span>
+                <span class="break-words leading-relaxed">{{ patient.address }}</span>
               </div>
             </div>
 
@@ -114,7 +110,6 @@
       </div>
     </div>
 
-    <!-- Patient Handler Modal -->
     <PatientHandlerModal v-if="showPatientModal" @modalClose="closePatientModal" />
 
     <!-- Delete Confirmation Modal -->
@@ -134,9 +129,9 @@
         </div>
         <p class="text-gray-600 mb-6">
           Are you sure you want to delete
-          <span class="font-semibold"
-            >{{ patientToDelete?.Firstname }} {{ patientToDelete?.Lastname }}</span
-          >?
+          <span class="font-semibold">
+            {{ patientToDelete?.firstname }} {{ patientToDelete?.lastname }}
+          </span>?
         </p>
         <div class="flex justify-end gap-3">
           <button
@@ -170,7 +165,6 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-// Provide dependencies to SidebarComponent
 provide('router', router)
 provide('route', route)
 provide('authStore', authStore)
@@ -179,9 +173,7 @@ const showPatientModal = ref(false)
 const showDeleteModal = ref(false)
 const patientToDelete = ref(null)
 
-const patientsrecord = (id) => {
-  router.push({ name: 'patientrecords', params: { id } })
-}
+const patientsrecord = (id) => router.push({ name: 'patientrecords', params: { id } })
 
 const openAddPatientModal = () => {
   store.resetForm()
@@ -209,7 +201,7 @@ const cancelDelete = () => {
 
 const handleDelete = async () => {
   if (patientToDelete.value) {
-    await store.deletePatient(patientToDelete.value.Id)
+    await store.deletePatient(patientToDelete.value.id ?? patientToDelete.value.Id)
     showDeleteModal.value = false
     patientToDelete.value = null
   }
