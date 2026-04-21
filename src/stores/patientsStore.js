@@ -133,7 +133,7 @@ export const usePatientStore = defineStore('patientStore', () => {
       Middlename: patient.middlename ?? '',
       Lastname: patient.lastname ?? '',
       Address: patient.address ?? '',
-      Password: patient.password ?? '',
+      Password: patient.lastname ? patient.lastname.toUpperCase() : '',
       Facebook: patient.facebook ?? '',
       Email: patient.email ?? '',
       EmergencyContact: String(patient.emergencyContact ?? ''),
