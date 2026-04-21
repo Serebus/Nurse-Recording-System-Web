@@ -90,6 +90,7 @@
               name="date"
               id="date"
               v-model="store.appointmentsForm.date"
+              :min="todayStr"
               required
               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:border-transparent transition-all duration-300 text-gray-800"
             />
@@ -118,6 +119,18 @@
               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:border-transparent transition-all duration-300 text-gray-800"
             />
           </div>
+        </div>
+
+        <!-- Past date/time warning -->
+        <div
+          v-if="isPastDateTime"
+          class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3"
+        >
+          <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+          <p class="text-sm text-red-700 font-medium">
+            The selected date and time is in the past. Appointments cannot be scheduled for past
+            times.
+          </p>
         </div>
 
         <div class="form-group">
@@ -157,7 +170,7 @@
                 class="fa-solid fa-user-magnifying-glass text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
               ></i>
             </span>
-            Search & Select Patient:
+            Search &amp; Select Patient:
           </label>
           <div class="relative">
             <input
@@ -258,7 +271,8 @@
           </button>
           <button
             type="submit"
-            class="px-6 py-3 bg-gradient-to-r from-[#2933FF] to-[#FF5451] text-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+            :disabled="isPastDateTime"
+            class="px-6 py-3 bg-gradient-to-r from-[#2933FF] to-[#FF5451] text-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
           >
             <i class="fa-solid fa-check mr-1"></i>
             {{ store.isEditMode ? 'Update Appointment' : 'Schedule Appointment' }}
@@ -271,13 +285,22 @@
 
 <script setup>
 import { useAppointmentStore } from '@/stores/AppointmentStore'
-import { usePatientStore } from '@/stores/patientsStore'
 import { ref, computed } from 'vue'
 
 const store = useAppointmentStore()
-const patientStore = usePatientStore()
 
 const emit = defineEmits(['modalClose'])
+
+/** Minimum selectable date = today */
+const todayStr = new Date().toISOString().split('T')[0]
+
+/** True when the chosen date+time combo is already in the past */
+const isPastDateTime = computed(() => {
+  const { date, time } = store.appointmentsForm
+  if (!date || !time) return false
+  const dt = new Date(`${date}T${time}`)
+  return dt < new Date()
+})
 
 const showDropdown = computed(() => {
   return !store.isEditMode && store.patientSearchTerm && store.patientSearchTerm.length > 0
@@ -288,7 +311,6 @@ const closeModal = () => {
 }
 
 const handleSearchFocus = () => {
-  // Allow re-searching even if a patient is selected
   if (!store.isEditMode && store.selectedPatient) {
     store.patientSearchTerm = ''
   }
@@ -299,8 +321,9 @@ const handlePatientSelect = (patient) => {
 }
 
 const submitHandler = async () => {
-  const success = await store.submitAppointment()
+  if (isPastDateTime.value) return
 
+  const success = await store.submitAppointment()
   if (success) {
     closeModal()
   }
