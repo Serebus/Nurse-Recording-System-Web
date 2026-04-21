@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <form @submit.prevent="submitHandler" class="p-6 space-y-5">
+      <div class="p-6 space-y-5">
         <!-- Date -->
         <div class="form-group">
           <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -45,88 +45,76 @@
           />
         </div>
 
-        <!-- Symptoms row -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-user-injured text-[#2933FF]"></i>
-              Previous Symptom:
-            </label>
-            <textarea
-              v-model="store.FollowupForm.symptom"
-              rows="3"
-              placeholder="Carry over from initial record..."
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-plus-circle text-orange-500"></i>
-              New Symptom:
-            </label>
-            <textarea
-              v-model="store.FollowupForm.new_symptom"
-              rows="3"
-              placeholder="Any new or changed symptoms..."
-              class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-300/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
-            ></textarea>
+        <!-- ── Previous context (read-only) ─────────────────────────────── -->
+        <div class="bg-gray-50 rounded-xl border border-gray-200 p-5 space-y-4">
+          <p class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
+            Previous record context (read-only)
+          </p>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 mb-1">Previous Symptom</p>
+              <div class="bg-white rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 min-h-[56px]">
+                {{ previousContext.symptom || '—' }}
+              </div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 mb-1">Previous Diagnosis</p>
+              <div class="bg-white rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 min-h-[56px]">
+                {{ previousContext.diagnosis || '—' }}
+              </div>
+            </div>
+            <div class="col-span-2">
+              <p class="text-xs font-semibold text-gray-500 mb-1">Previous Treatment</p>
+              <div class="bg-white rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 min-h-[40px]">
+                {{ previousContext.treatment || '—' }}
+              </div>
+            </div>
           </div>
         </div>
+        <!-- ──────────────────────────────────────────────────────────────── -->
 
-        <!-- Diagnosis row -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-stethoscope text-[#2933FF]"></i>
-              Previous Diagnosis:
-            </label>
-            <textarea
-              v-model="store.FollowupForm.diagnosis"
-              rows="3"
-              placeholder="From the original record..."
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-plus-circle text-orange-500"></i>
-              Updated Diagnosis:
-            </label>
-            <textarea
-              v-model="store.FollowupForm.new_diagnostic"
-              rows="3"
-              placeholder="Revised or new diagnostic..."
-              class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-300/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
-            ></textarea>
-          </div>
+        <!-- New Symptom -->
+        <div class="form-group">
+          <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-orange-500"></i>
+            New / Updated Symptom:
+          </label>
+          <textarea
+            v-model="store.FollowupForm.new_symptom"
+            rows="3"
+            placeholder="Any new or changed symptoms..."
+            class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-300/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
+          ></textarea>
         </div>
 
-        <!-- Treatment row -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-pills text-[#FF5451]"></i>
-              Previous Treatment:
-            </label>
-            <textarea
-              v-model="store.FollowupForm.treatment"
-              rows="3"
-              placeholder="Ongoing treatments..."
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-plus-circle text-emerald-500"></i>
-              Additional Treatment:
-            </label>
-            <textarea
-              v-model="store.FollowupForm.additional_treatment"
-              rows="3"
-              placeholder="New or additional treatments..."
-              class="w-full px-4 py-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-300/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
-            ></textarea>
-          </div>
+        <!-- Updated Diagnosis -->
+        <div class="form-group">
+          <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-orange-500"></i>
+            Updated Diagnosis:
+          </label>
+          <textarea
+            v-model="store.FollowupForm.new_diagnostic"
+            rows="3"
+            placeholder="Revised or new diagnostic..."
+            class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-300/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
+          ></textarea>
+        </div>
+
+        <!-- Additional Treatment -->
+        <div class="form-group">
+          <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-emerald-500"></i>
+            Additional Treatment:
+          </label>
+          <textarea
+            v-model="store.FollowupForm.additional_treatment"
+            rows="3"
+            placeholder="New or additional treatments..."
+            class="w-full px-4 py-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-300/50 focus:border-transparent transition-all resize-none text-gray-800 placeholder-gray-400"
+          ></textarea>
         </div>
 
         <!-- Notes -->
@@ -154,27 +142,79 @@
             Cancel
           </button>
           <button
-            type="submit"
+            @click="submitHandler"
+            type="button"
             class="px-6 py-3 bg-gradient-to-r from-[#2933FF] to-[#FF5451] text-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:scale-105 active:scale-95"
           >
             <i class="fa-solid fa-check mr-1"></i>
             {{ store.isEditMode ? 'Update Follow-up' : 'Save Follow-up' }}
           </button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useFollowupStore } from '@/stores/FollowupStore'
+import { usePatientRecord } from '@/stores/patientRecord'
 
 const store = useFollowupStore()
+const recordStore = usePatientRecord()
+
+const props = defineProps({
+  patientId: [String, Number],
+  recordId: [String, Number],
+  followupData: Object,
+})
+
 const emit = defineEmits(['modalClose', 'saved'])
 
-const closeModal = () => {
-  emit('modalClose')
-}
+/**
+ * Build previous context from:
+ *  1. The original record (symptom / diagnosis / treatment)
+ *  2. The most-recent existing follow-up's new_symptom / new_diagnostic / additional_treatment
+ *     (if there is one — i.e. a second+ follow-up)
+ */
+const previousContext = computed(() => {
+  const record = recordStore.patientRecords.find(
+    (r) => String(r.id ?? r.Id) === String(props.recordId),
+  )
+
+  // All follow-ups for this record, sorted oldest → newest
+  const followups = store.followups
+    .filter(
+      (f) =>
+        String(f.patientId) === String(props.patientId) &&
+        String(f.recordId) === String(props.recordId),
+    )
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+
+  // If editing, exclude the current follow-up from context lookback
+  const currentId = store.FollowupForm?.id
+  const previousFollowups = currentId
+    ? followups.filter((f) => String(f.id) !== String(currentId))
+    : followups
+
+  const latest = previousFollowups.length ? previousFollowups[previousFollowups.length - 1] : null
+
+  if (latest) {
+    return {
+      symptom: latest.new_symptom || latest.symptom || record?.symptom || '',
+      diagnosis: latest.new_diagnostic || latest.diagnosis || record?.diagnosis || '',
+      treatment: latest.additional_treatment || latest.treatment || record?.treatment || '',
+    }
+  }
+
+  return {
+    symptom: record?.symptom || '',
+    diagnosis: record?.diagnosis || '',
+    treatment: record?.treatment || '',
+  }
+})
+
+const closeModal = () => emit('modalClose')
 
 const submitHandler = async () => {
   const success = await store.submitFollowupForm()
