@@ -166,23 +166,6 @@
           />
         </div>
 
-        <div class="form-group">
-          <label
-            for="password"
-            class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2"
-          >
-            <i class="fa-solid fa-lock text-[#FF5451]"></i>
-            Password:
-          </label>
-          <input
-            type="password"
-            id="password"
-            v-model="store.formPatient.password"
-            placeholder="Enter secure password"
-            autocomplete="off"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400"
-          />
-        </div>
 
         <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
           <button
