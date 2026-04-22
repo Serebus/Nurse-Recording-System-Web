@@ -5,10 +5,13 @@ import { useAuthStore } from './authStore.js'
 export const useDashboardStore = defineStore('dashboardStore', () => {
   const authStore = useAuthStore()
 
-  const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(authStore.getToken && { Authorization: `Bearer ${authStore.getToken.value}` }),
-  })
+  const getHeaders = () => {
+    const token = localStorage.getItem('token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    }
+  }
   const stats = ref({
     totalPatients: 0,
     totalAppointments: 0,
