@@ -36,6 +36,8 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     Notes: r.Notes ?? r.notes ?? '',
     closed: Boolean(r.closed ?? r.Closed ?? false),
     Closed: Boolean(r.Closed ?? r.closed ?? false),
+    status: r.status ?? r.Status ?? '',
+    Status: r.Status ?? r.status ?? '',
   })
 
   const buildRecordPayload = (record, idOverride = null) => ({
@@ -49,11 +51,12 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     Treatment: record.Treatment ?? record.treatment ?? '',
     Notes: record.Notes ?? record.notes ?? '',
     Closed: Boolean(record.closed ?? record.Closed ?? false),
+    Status: record.Status ?? record.status ?? '',
   })
 
   const fetchRecords = async () => {
     try {
-      const response = await fetch('/api/patientrecords', { headers: getHeaders() })
+      const response = await fetch('/api/PatientRecords', { headers: getHeaders() })
       if (!response.ok) throw new Error('Failed to fetch patient records')
       const data = await response.json()
       patientRecords.value = data.map(normalizeRecord)
@@ -125,7 +128,7 @@ export const usePatientRecord = defineStore('patientRecord', () => {
       normalized.RecordId = normalized.recordId
     }
     try {
-      const response = await fetch('/api/patientrecords', {
+      const response = await fetch('/api/PatientRecords', {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(buildRecordPayload(normalized, 0)),
@@ -144,7 +147,7 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     const serverId = Number(id)
     const payload = buildRecordPayload(updatedRecord, serverId)
     try {
-      const response = await fetch(`/api/patientrecords/${serverId}`, {
+      const response = await fetch(`/api/PatientRecords/${serverId}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(payload),
@@ -192,7 +195,7 @@ export const usePatientRecord = defineStore('patientRecord', () => {
     const payload = buildRecordPayload(patientRecords.value[index], serverId)
 
     try {
-      const response = await fetch(`/api/patientrecords/${serverId}`, {
+      const response = await fetch(`/api/PatientRecords/${serverId}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(payload),
@@ -222,7 +225,7 @@ export const usePatientRecord = defineStore('patientRecord', () => {
 
   const deleteRecord = async (id) => {
     try {
-      const response = await fetch(`/api/patientrecords/${id}`, {
+      const response = await fetch(`/api/PatientRecords/${id}`, {
         method: 'DELETE',
         headers: getHeaders(),
       })
