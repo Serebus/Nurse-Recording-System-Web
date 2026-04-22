@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 /**
  * Decode a JWT and return its payload, or null if malformed.
@@ -56,18 +56,25 @@ export const useAuthStore = defineStore('authStore', () => {
   }
 
   /**
-   * isAuthenticated — false if no nurse data OR if the stored token is
-   * already expired at page load / store init time.
+   * isAuthenticated — pure computed, no side effects.
+   * false if no nurse data OR if the stored token is expired.
    */
   const isAuthenticated = computed(() => {
     if (!nurse.value) return false
-    if (isTokenExpired(token.value)) {
-      // Side-effect: clear stale data so the router guard fires correctly.
-      // We do this lazily rather than in a watcher to avoid reactivity loops.
-      clearSession()
-      return false
-    }
+    if (isTokenExpired(token.value)) return false
     return true
+  })
+
+  /**
+   * Watcher handles clearing a stale session as a side effect.
+   * Kept separate from the computed so that clearSession() is never called
+   * multiple times during app boot when many stores read isAuthenticated
+   * simultaneously through their own immediate watchers.
+   */
+  watch(isAuthenticated, (isAuth) => {
+    if (!isAuth && (nurse.value || token.value)) {
+      clearSession()
+    }
   })
 
   const getToken = computed(() => token.value)
