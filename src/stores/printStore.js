@@ -21,18 +21,44 @@ export const usePrintStore = defineStore('printStore', () => {
   // Get specific record or all records for patient
   const records = computed(() => {
     if (!selectedPatientId.value) return []
-
     const allRecords = patientRecordStore.getpatient(selectedPatientId.value)
-
     if (selectedRecordId.value) {
       return allRecords.filter((r) => r.id === selectedRecordId.value)
     }
-
     return allRecords
   })
 
-  // Get current nurse information
-  const nurse = computed(() => authStore.nurse)
+  // Get current nurse information — handles multiple authStore shapes
+  const nurse = computed(() => {
+    // Try common property names your authStore might use
+    return authStore.nurse ?? authStore.user ?? authStore.currentUser ?? null
+  })
+
+  // Nurse display name — tries every possible field name
+  const nurseDisplayName = computed(() => {
+    const n = nurse.value
+    if (!n) return 'N/A'
+
+    // Try full name fields first
+    if (n.fullname) return n.fullname
+    if (n.full_name) return n.full_name
+    if (n.name) return n.name
+
+    // Build from parts
+    const first = n.firstname || n.Firstname || n.firstName || ''
+    const last = n.lastname || n.Lastname || n.lastName || ''
+    if (first || last) return `${first} ${last}`.trim()
+
+    // Fallback to username or email
+    return n.username || n.Username || n.email || n.Email || 'N/A'
+  })
+
+  // Nurse email
+  const nurseEmail = computed(() => {
+    const n = nurse.value
+    if (!n) return ''
+    return n.email || n.Email || ''
+  })
 
   // Format today's date
   const todaysDate = computed(() => {
@@ -54,19 +80,16 @@ export const usePrintStore = defineStore('printStore', () => {
     return `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || 'Unknown Patient'
   })
 
-  // Set data for printing
   const setPrintData = (patientId, recordId = null) => {
     selectedPatientId.value = patientId
     selectedRecordId.value = recordId
   }
 
-  // Reset print data
   const resetPrintData = () => {
     selectedPatientId.value = null
     selectedRecordId.value = null
   }
 
-  // Trigger browser print dialog
   const printDocument = () => {
     window.print()
   }
@@ -77,6 +100,8 @@ export const usePrintStore = defineStore('printStore', () => {
     patient,
     records,
     nurse,
+    nurseDisplayName,
+    nurseEmail,
     todaysDate,
     patientFullName,
     setPrintData,
