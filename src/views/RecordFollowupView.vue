@@ -223,7 +223,7 @@
               </div>
 
               <div
-                class="bg-[#F8F9FF] rounded-2xl border border-[#E8EAFF] p-6 hover:shadow-md transition-all group"
+                class="bg-[#F8F9FF] rounded-2xl border border-[#E8EAFF] p-6 hover:shadow-md transition-all"
               >
                 <div class="flex items-start justify-between mb-4">
                   <div>
@@ -236,21 +236,20 @@
                       <i class="fa-solid fa-calendar mr-1"></i>{{ formatDate(followup.date) }}
                     </p>
                   </div>
-                  <div
-                    v-if="!record?.closed"
-                    class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+
+                  <!-- ✅ FIX: buttons are always visible, not hidden behind group-hover -->
+                  <div v-if="!record?.closed" class="flex gap-2">
                     <button
                       @click="editFollowup(followup)"
-                      class="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:shadow-sm transition-all"
-                      title="Edit"
+                      class="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:shadow-sm hover:border-[#2933FF]/30 transition-all"
+                      title="Edit follow-up"
                     >
                       <i class="fa-solid fa-pen text-[#2933FF] text-xs"></i>
                     </button>
                     <button
                       @click="confirmDeleteFollowup(followup)"
-                      class="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:shadow-sm transition-all"
-                      title="Delete"
+                      class="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:shadow-sm hover:border-red-300 transition-all"
+                      title="Delete follow-up"
                     >
                       <i class="fa-solid fa-trash text-red-500 text-xs"></i>
                     </button>
