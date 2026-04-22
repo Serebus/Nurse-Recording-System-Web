@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div
-      v-if="visible"
+      v-if="alarmStore.isVisibleFor(deviceId)"
       class="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 font-poppins"
     >
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100 p-8">
@@ -18,28 +18,28 @@
 
         <!-- Badge -->
         <div class="text-center mb-3">
-          <span
-            class="inline-block text-xs font-semibold px-3 py-1 rounded-full"
-            :class="badgeClass"
-          >
+          <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full" :class="badgeClass">
             {{ badgeText }}
           </span>
         </div>
+
+        <!-- Device label -->
+        <p class="text-xs text-center text-gray-400 mb-1">{{ deviceId }}</p>
 
         <!-- Title & message -->
         <h2 class="text-xl font-bold text-gray-800 text-center mb-2">{{ titleText }}</h2>
         <p class="text-sm text-gray-500 text-center mb-6 leading-relaxed">{{ messageText }}</p>
 
-        <!-- Action buttons (initial state) -->
+        <!-- calling -->
         <div v-if="callState === 'calling'" class="flex gap-3">
           <button
-            @click="dismiss"
+            @click="alarmStore.dismissCall(deviceId)"
             class="flex-1 py-3 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all active:scale-95"
           >
             Dismiss
           </button>
           <button
-            @click="setComing"
+            @click="alarmStore.setComing(deviceId)"
             class="flex-1 py-3 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-all hover:shadow-lg active:scale-95"
           >
             <i class="fa-solid fa-person-walking mr-1"></i>
@@ -47,7 +47,7 @@
           </button>
         </div>
 
-        <!-- End call confirmation (after "coming") -->
+        <!-- coming -->
         <div v-if="callState === 'coming'" class="border-t border-gray-100 pt-4">
           <p class="text-xs text-gray-500 mb-2">
             Type <span class="font-bold text-gray-700">END CALL</span> to stop the buzzer
@@ -70,7 +70,7 @@
           </div>
         </div>
 
-        <!-- Ended state close button -->
+        <!-- ended -->
         <div v-if="callState === 'ended'">
           <button
             @click="closeModal"
@@ -85,17 +85,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'                     // ← removed onMounted, onUnmounted
+import { useAlarmStore } from '@/stores/alarmStore.js'
 
-const API = 'http://192.168.1.14:3000'
-const POLL_MS = 2000
+const props = defineProps({
+  deviceId: {
+    type: String,
+    required: true,
+  },
+})
 
-const visible = ref(false)
-const callState = ref('idle') // idle | calling | coming | ended
+const alarmStore = useAlarmStore()
 const endInput = ref('')
-let pollInterval = null
 
-// --- Computed UI ---
+const callState = computed(() => alarmStore.callStateFor(props.deviceId))
 
 const iconBg = computed(() => ({
   'bg-red-50 animate-pulse': callState.value === 'calling',
@@ -115,89 +118,26 @@ const badgeClass = computed(() => ({
   'bg-blue-100 text-blue-700': callState.value === 'ended',
 }))
 
-const badgeText = computed(
-  () =>
-    ({
-      calling: 'Incoming call',
-      coming: 'On my way',
-      ended: 'Call ended',
-    })[callState.value] ?? '',
-)
-
-const titleText = computed(
-  () =>
-    ({
-      calling: 'Patient is calling!',
-      coming: 'Marked as coming',
-      ended: 'Buzzer stopped',
-    })[callState.value] ?? '',
-)
-
-const messageText = computed(
-  () =>
-    ({
-      calling:
-        'Someone pressed the call button. Tap "I\'m coming" to notify the patient you\'re on your way.',
-      coming: 'Patient notified. Buzzer stays active until you end the call below.',
-      ended: 'Call has been ended. The Arduino buzzer will stop.',
-    })[callState.value] ?? '',
-)
-
-// --- Actions ---
-
-async function patchStatus(patch) {
-  await fetch(`${API}/callStatus`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(patch),
-  })
-}
-
-async function setComing() {
-  await patchStatus({ status: 'coming', isCalling: true })
-}
-
-async function dismiss() {
-  await patchStatus({ status: 'idle', isCalling: false })
-}
+const badgeText  = computed(() => ({ calling: 'Incoming call', coming: 'On my way',      ended: 'Call ended'    })[callState.value] ?? '')
+const titleText  = computed(() => ({ calling: 'Patient is calling!', coming: 'Marked as coming', ended: 'Buzzer stopped' })[callState.value] ?? '')
+const messageText = computed(() => ({
+  calling: "Someone pressed the call button. Tap \"I'm coming\" to notify the patient.",
+  coming:  'Patient notified. Buzzer stays active until you end the call below.',
+  ended:   'Call has been ended. The Arduino buzzer will stop.',
+})[callState.value] ?? '')
 
 async function tryEndCall() {
   if (endInput.value.trim().toUpperCase() !== 'END CALL') return
-
-  await patchStatus({ status: 'ended', isCalling: false })
+  await alarmStore.endCall(props.deviceId)
+  endInput.value = ''
 }
 
 async function closeModal() {
-  await patchStatus({ status: 'idle', isCalling: false })
+  await alarmStore.dismissCall(props.deviceId)
+  endInput.value = ''
 }
 
-// --- Polling ---
-
-async function poll() {
-  try {
-    const res = await fetch(`${API}/callStatus`)
-    const data = await res.json()
-
-    callState.value = data.status
-
-    if (data.isCalling || data.status === 'ended') {
-      visible.value = true
-    } else if (data.status === 'idle') {
-      visible.value = false
-      endInput.value = ''
-    }
-  } catch (e) {
-    console.error('Server sync failed', e)
-  }
-}
-
-onMounted(() => {
-  pollInterval = setInterval(poll, POLL_MS)
-})
-
-onUnmounted(() => {
-  clearInterval(pollInterval)
-})
+// Polling is handled globally in App.vue — nothing needed here
 </script>
 
 <style scoped>
