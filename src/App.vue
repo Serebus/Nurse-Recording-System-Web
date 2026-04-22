@@ -1,9 +1,20 @@
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
+import { useAlarmStore } from '@/stores/alarmStore.js'
 import NurseCallModal from '@/components/NurseCallModal.vue'
+
+const alarmStore = useAlarmStore()   // ← this was missing
+
+onMounted(() => alarmStore.startPolling())
+onUnmounted(() => alarmStore.stopPolling())
 </script>
 
 <template>
   <header></header>
-  <NurseCallModal />
+  <NurseCallModal
+    v-for="(_, deviceId) in alarmStore.devices"
+    :key="deviceId"
+    :deviceId="deviceId"
+  />
   <RouterView />
 </template>
