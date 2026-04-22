@@ -2,252 +2,208 @@
   <div class="min-h-screen flex font-poppins bg-[#F0F2FF] text-gray-900">
     <SidebarComponent />
 
-    <div class="main flex-1 ml-[280px] p-10 overflow-auto">
-      <button
-        @click="goBack"
-        class="mb-6 px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:shadow-md transition-all flex items-center gap-2 text-sm"
-      >
-        <i class="fa-solid fa-arrow-left text-[#2933FF]"></i>
-        Back to Dashboard
-      </button>
+    <div class="main flex-1 ml-[280px] overflow-auto">
 
-      <div class="Personalinfo bg-white rounded-2xl shadow-sm p-8 mb-8 border border-white">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <div
-              class="w-16 h-16 rounded-full bg-gradient-to-r from-[#2933FF] to-[#FF5451] flex items-center justify-center text-white text-2xl font-bold shadow-lg"
-            >
+      <!-- Sticky top bar -->
+      <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-10 py-4 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <button
+            @click="goBack"
+            class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+          >
+            <i class="fa-solid fa-arrow-left text-gray-600 text-sm"></i>
+          </button>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#2933FF] to-[#FF5451] flex items-center justify-center text-white font-bold text-sm shadow-md">
               {{ patientInitials }}
             </div>
             <div>
-              <h2
-                class="text-3xl font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-              >
+              <h1 class="text-lg font-extrabold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent leading-tight">
                 {{ patientFullName }}
-              </h2>
-              <p class="text-gray-500 text-sm mt-1">Patient Medical Records · #{{ patientId }}</p>
+              </h1>
+              <p class="text-xs text-gray-400">Patient #{{ patientId }} · Medical Records</p>
             </div>
           </div>
-          <div class="flex gap-3">
-            <button
-              @click="printAllRecords"
-              class="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:scale-105 active:scale-95 flex items-center gap-2"
-            >
-              <i class="fa-solid fa-print"></i>
-              Print All Records
-            </button>
-            <button
-              @click="openAddRecordModal"
-              class="px-6 py-3 bg-gradient-to-r from-[#2933FF] to-[#FF5451] text-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:scale-105 active:scale-95 flex items-center gap-2"
-            >
-              <i class="fa-solid fa-plus"></i>
-              Add New Record
-            </button>
-          </div>
+        </div>
+        <div class="flex gap-2">
+          <button
+            @click="printAllRecords"
+            class="flex items-center gap-2 px-4 py-2.5 bg-purple-50 text-purple-700 text-sm font-semibold rounded-xl hover:bg-purple-100 transition-all hover:scale-105 active:scale-95"
+          >
+            <i class="fa-solid fa-print text-xs"></i>
+            Print All
+          </button>
+          <button
+            @click="openAddRecordModal"
+            class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#2933FF] to-[#FF5451] text-white text-sm font-semibold rounded-xl shadow hover:shadow-lg hover:scale-105 active:scale-95 transition-all"
+          >
+            <i class="fa-solid fa-plus text-xs"></i>
+            New Record
+          </button>
         </div>
       </div>
 
-      <div class="PersonalRecords">
-        <div class="search mb-8 relative">
-          <div class="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none">
-            <i
-              class="fa-solid fa-magnifying-glass text-xl bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-            ></i>
-          </div>
+      <div class="p-10">
+
+        <!-- Search -->
+        <div class="relative mb-8">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-sm"></i>
           <input
             type="text"
             v-model="searchQuery"
-            placeholder="Search records..."
-            class="w-full pl-14 pr-6 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2933FF]/50 bg-white text-gray-800 placeholder-gray-400 transition-all duration-300 border border-gray-100"
+            placeholder="Search records by diagnosis, symptom, treatment..."
+            class="w-full pl-11 pr-5 py-3.5 bg-white rounded-2xl border border-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2933FF]/30 text-sm text-gray-700 placeholder-gray-300 transition-all"
           />
         </div>
 
-        <div
-          v-if="filteredRecords.length === 0"
-          class="text-center py-12 bg-white rounded-2xl shadow-sm"
-        >
-          <div
-            class="w-20 h-20 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center mx-auto mb-4"
-          >
-            <i
-              class="fa-solid fa-folder-open text-3xl bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-            ></i>
+        <!-- Empty state -->
+        <div v-if="filteredRecords.length === 0" class="flex flex-col items-center justify-center py-24">
+          <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center mb-4">
+            <i class="fa-solid fa-folder-open text-2xl bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"></i>
           </div>
-          <p class="text-gray-500 text-lg">No records found</p>
+          <p class="text-gray-400 font-medium">No records found</p>
+          <p class="text-gray-300 text-sm mt-1">Add a new record to get started</p>
         </div>
 
-        <div class="records grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Records Grid -->
+        <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           <div
             v-for="record in filteredRecords"
             :key="record.id"
-            class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 duration-300 border group relative overflow-hidden cursor-pointer"
-            :class="record.closed ? 'border-gray-300 opacity-80' : 'border-gray-100'"
+            class="group bg-white rounded-2xl border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col relative"
+            :class="record.closed ? 'border-gray-200 opacity-80' : 'border-gray-100'"
             @click="goToFollowup(record)"
           >
+            <!-- Closed overlay -->
+            <div v-if="record.closed" class="absolute inset-0 bg-gray-50/40 pointer-events-none z-0 rounded-2xl"></div>
+
+            <!-- Top accent bar -->
             <div
-              v-if="record.closed"
-              class="absolute inset-0 bg-gray-50/50 pointer-events-none z-0"
-            ></div>
-            <div
-              class="absolute inset-0 bg-gradient-to-br from-[#2933FF]/5 to-[#FF5451]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              class="h-1.5 w-full transition-opacity duration-300"
+              :class="record.closed ? 'bg-gray-200' : 'bg-gradient-to-r from-[#2933FF] to-[#FF5451] opacity-0 group-hover:opacity-100'"
             ></div>
 
-            <div class="relative z-10 p-6">
+            <div class="relative z-10 p-6 flex flex-col flex-1">
+
+              <!-- Header -->
               <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center gap-2 flex-1 min-w-0">
-                  <span
-                    class="w-10 h-10 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center flex-shrink-0"
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div
+                    class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                    :class="record.closed ? 'bg-gray-100' : 'bg-gradient-to-br from-[#2933FF]/10 to-[#FF5451]/10'"
                   >
                     <i
-                      class="fa-solid fa-stethoscope text-sm bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
+                      class="fa-solid fa-stethoscope text-sm"
+                      :class="record.closed ? 'text-gray-400' : 'text-[#2933FF]'"
                     ></i>
-                  </span>
+                  </div>
                   <div class="min-w-0">
                     <h2
-                      class="text-xl font-bold bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent truncate"
+                      class="font-bold text-sm leading-tight truncate"
+                      :class="record.closed ? 'text-gray-500' : 'text-gray-800'"
                     >
                       {{ record.diagnosis || 'No diagnosis' }}
                     </h2>
-                    <p class="text-xs text-gray-400 mt-0.5">{{ record.recordId }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5 font-mono">{{ record.recordId }}</p>
                   </div>
                 </div>
-                <div class="flex gap-1.5 ml-1 flex-shrink-0" @click.stop>
-                  <span
-                    v-if="record.closed"
-                    class="self-center text-xs font-bold px-2 py-1 rounded-full bg-gray-200 text-gray-600"
-                  >
-                    Closed
+
+                <!-- Action buttons -->
+                <div class="flex gap-1.5 ml-2 flex-shrink-0" @click.stop>
+                  <span v-if="record.closed" class="self-center text-xs font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-500 mr-1">
+                    <i class="fa-solid fa-lock text-[10px] mr-0.5"></i>Closed
                   </span>
                   <button
                     @click="handleToggleClosed(record)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95"
-                    :class="record.closed ? 'bg-green-50' : 'bg-orange-50'"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center hover:shadow-sm transition-all hover:scale-110 active:scale-95"
+                    :class="record.closed ? 'bg-green-50 hover:bg-green-100' : 'bg-orange-50 hover:bg-orange-100'"
                     :title="record.closed ? 'Reopen Record' : 'Close Record'"
                   >
-                    <i
-                      class="text-xs"
-                      :class="
-                        record.closed
-                          ? 'fa-solid fa-lock-open text-green-600'
-                          : 'fa-solid fa-lock text-orange-500'
-                      "
-                    ></i>
+                    <i class="text-[11px]" :class="record.closed ? 'fa-solid fa-lock-open text-green-600' : 'fa-solid fa-lock text-orange-500'"></i>
                   </button>
                   <button
                     @click="printSingleRecord(record.id)"
-                    class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95"
-                    title="Print Record"
+                    class="w-8 h-8 rounded-lg bg-purple-50 hover:bg-purple-100 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                    title="Print"
                   >
-                    <i class="fa-solid fa-print text-xs text-purple-600"></i>
+                    <i class="fa-solid fa-print text-[11px] text-purple-600"></i>
                   </button>
                   <button
                     @click="handleEdit(record)"
                     :disabled="record.closed"
-                    class="w-8 h-8 rounded-lg bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Edit Record"
+                    class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Edit"
                   >
-                    <i
-                      class="fa-solid fa-pen-to-square text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-                    ></i>
+                    <i class="fa-solid fa-pen text-[11px] text-[#2933FF]"></i>
                   </button>
                   <button
                     @click="confirmDelete(record)"
-                    class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center hover:shadow-md transition-all hover:scale-110 active:scale-95"
-                    title="Delete Record"
+                    class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                    title="Delete"
                   >
-                    <i class="fa-solid fa-trash text-xs text-red-500"></i>
+                    <i class="fa-solid fa-trash text-[11px] text-red-500"></i>
                   </button>
                 </div>
               </div>
 
-              <div class="space-y-3">
-                <div v-if="record.symptom" class="flex items-start gap-2">
-                  <span
-                    class="w-8 h-8 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center flex-shrink-0 mt-1"
-                  >
-                    <i
-                      class="fa-solid fa-user-injured text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-                    ></i>
+              <!-- Content rows -->
+              <div class="space-y-3 flex-1 mb-4">
+                <div v-if="record.symptom" class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-user-injured text-[9px] text-[#2933FF]"></i>
                   </span>
                   <div>
-                    <h3 class="text-sm font-semibold text-gray-700 mb-1">Symptom</h3>
-                    <p class="text-sm text-gray-600 line-clamp-2">{{ record.symptom }}</p>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Symptom</p>
+                    <p class="text-sm text-gray-700 line-clamp-2">{{ record.symptom }}</p>
                   </div>
                 </div>
 
-                <div class="flex items-start gap-2">
-                  <span
-                    class="w-8 h-8 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center flex-shrink-0 mt-1"
-                  >
-                    <i
-                      class="fa-solid fa-pills text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-                    ></i>
+                <div class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-pills text-[9px] text-[#FF5451]"></i>
                   </span>
                   <div>
-                    <h3 class="text-sm font-semibold text-gray-700 mb-1">Treatment</h3>
-                    <p class="text-sm text-gray-600 line-clamp-2">{{ record.treatment }}</p>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Treatment</p>
+                    <p class="text-sm text-gray-700 line-clamp-2">{{ record.treatment || '—' }}</p>
                   </div>
                 </div>
 
-                <div v-if="record.notes" class="flex items-start gap-2">
-                  <span
-                    class="w-8 h-8 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center flex-shrink-0 mt-1"
-                  >
-                    <i
-                      class="fa-solid fa-notes-medical text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-                    ></i>
+                <div v-if="record.notes" class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-md bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-notes-medical text-[9px] text-gray-400"></i>
                   </span>
                   <div>
-                    <h3 class="text-sm font-semibold text-gray-700 mb-1">Notes</h3>
-                    <p class="text-sm text-gray-600 line-clamp-2">{{ record.notes }}</p>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Notes</p>
+                    <p class="text-sm text-gray-700 line-clamp-2">{{ record.notes }}</p>
                   </div>
-                </div>
-
-                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-8 h-8 rounded-full bg-gradient-to-r from-[#2933FF]/10 to-[#FF5451]/10 flex items-center justify-center"
-                    >
-                      <i
-                        class="fa-solid fa-calendar text-xs bg-gradient-to-r from-[#2933FF] to-[#FF5451] bg-clip-text text-transparent"
-                      ></i>
-                    </span>
-                    <p class="text-xs text-gray-500">{{ formatDate(record.date) }}</p>
-                  </div>
-                  <span
-                    class="text-xs font-semibold px-2.5 py-1 rounded-full border"
-                    :class="
-                      record.closed
-                        ? 'bg-gray-100 text-gray-500 border-gray-200'
-                        : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-100'
-                    "
-                  >
-                    <i
-                      class="mr-1 text-xs"
-                      :class="
-                        record.closed
-                          ? 'fa-solid fa-ban text-gray-400'
-                          : 'fa-solid fa-rotate-right text-emerald-500'
-                      "
-                    ></i>
-                    <span v-if="record.closed">No new follow-ups</span>
-                    <span v-else>
-                      {{ getFollowupCount(record.id) }} follow-up{{
-                        getFollowupCount(record.id) !== 1 ? 's' : ''
-                      }}
-                    </span>
-                  </span>
-                </div>
-
-                <div class="opacity-0 group-hover:opacity-100 transition-opacity pt-1">
-                  <p v-if="record.closed" class="text-xs text-center text-gray-400 font-semibold">
-                    Record is closed — click lock icon to reopen
-                  </p>
-                  <p v-else class="text-xs text-center text-[#2933FF] font-semibold">
-                    Click to view details &amp; follow-ups →
-                  </p>
                 </div>
               </div>
+
+              <!-- Footer -->
+              <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                  <i class="fa-solid fa-calendar text-[10px]"></i>
+                  {{ formatDate(record.date) }}
+                </p>
+                <span
+                  class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                  :class="record.closed
+                    ? 'bg-gray-100 text-gray-500'
+                    : 'bg-emerald-50 text-emerald-700'"
+                >
+                  <i class="mr-1 text-[10px]" :class="record.closed ? 'fa-solid fa-ban' : 'fa-solid fa-rotate-right'"></i>
+                  <span v-if="record.closed">Closed</span>
+                  <span v-else>{{ getFollowupCount(record.id) }} follow-up{{ getFollowupCount(record.id) !== 1 ? 's' : '' }}</span>
+                </span>
+              </div>
+
+              <!-- Hover hint -->
+              <p v-if="!record.closed" class="text-xs text-center text-[#2933FF] font-semibold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                View details & follow-ups →
+              </p>
+              <p v-else class="text-xs text-center text-gray-400 font-medium mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                Reopen to add follow-ups
+              </p>
             </div>
           </div>
         </div>
@@ -256,38 +212,24 @@
 
     <RecordsHandler v-if="showRecordModal" @modalClose="closeRecordModal" />
 
-    <!-- Delete Confirmation Modal -->
-    <div
-      v-if="showDeleteModal"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-poppins"
-    >
+    <!-- Delete Modal -->
+    <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-poppins">
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100 p-6">
         <div class="flex items-center gap-3 mb-4">
           <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
             <i class="fa-solid fa-exclamation-triangle text-xl text-red-500"></i>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-gray-800">Delete Record</h3>
-            <p class="text-sm text-gray-500">This action cannot be undone</p>
+            <h3 class="text-lg font-bold text-gray-800">Delete Record</h3>
+            <p class="text-sm text-gray-400">This action cannot be undone</p>
           </div>
         </div>
-        <p class="text-gray-600 mb-6">
-          Are you sure you want to delete the record for
-          <span class="font-semibold">{{ recordToDelete?.diagnosis }}</span>?
+        <p class="text-gray-600 text-sm mb-6">
+          Delete record for <span class="font-semibold text-gray-800">{{ recordToDelete?.diagnosis }}</span>?
         </p>
         <div class="flex justify-end gap-3">
-          <button
-            @click="cancelDelete"
-            class="px-6 py-3 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl transition-all hover:bg-gray-200 hover:shadow-md active:scale-95"
-          >
-            Cancel
-          </button>
-          <button
-            @click="handleDelete"
-            class="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:scale-105 active:scale-95"
-          >
-            Delete
-          </button>
+          <button @click="cancelDelete" class="px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 active:scale-95 transition-all">Cancel</button>
+          <button @click="handleDelete" class="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all">Delete</button>
         </div>
       </div>
     </div>
@@ -321,19 +263,14 @@ const showRecordModal = ref(false)
 const showDeleteModal = ref(false)
 const recordToDelete = ref(null)
 
-/** Find the patient with normalized fields */
-const patient = computed(() =>
-  patientsStore.patients.find((p) => Number(p.id ?? p.Id) === patientId),
-)
+const patient = computed(() => patientsStore.patients.find((p) => Number(p.id ?? p.Id) === patientId))
 
-/** Full name built from normalized camelCase fields */
 const patientFullName = computed(() => {
   if (!patient.value) return `Patient #${patientId}`
   const { firstname, middlename, lastname } = patient.value
   return [firstname, middlename, lastname].filter(Boolean).join(' ')
 })
 
-/** Initials for the avatar */
 const patientInitials = computed(() => {
   if (!patient.value) return '?'
   const f = patient.value.firstname?.[0] ?? ''
@@ -363,21 +300,13 @@ const getFollowupCount = (recordId) =>
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 const goBack = () => router.push({ name: 'home' })
-
-const goToFollowup = (record) =>
-  router.push({ name: 'record', params: { patientId, recordId: record.id } })
-
+const goToFollowup = (record) => router.push({ name: 'record', params: { patientId, recordId: record.id } })
 const printAllRecords = () => router.push({ name: 'printview', params: { patientId } })
-const printSingleRecord = (recordId) =>
-  router.push({ name: 'printview', params: { patientId, recordId } })
+const printSingleRecord = (recordId) => router.push({ name: 'printview', params: { patientId, recordId } })
 
 const openAddRecordModal = () => {
   patientRecord.resetRecordForm()
@@ -390,13 +319,9 @@ const handleEdit = (record) => {
   showRecordModal.value = true
 }
 
-const closeRecordModal = () => {
-  showRecordModal.value = false
-}
+const closeRecordModal = () => { showRecordModal.value = false }
 
-const handleToggleClosed = async (record) => {
-  await patientRecord.toggleRecordClosed(record)
-}
+const handleToggleClosed = async (record) => { await patientRecord.toggleRecordClosed(record) }
 
 const confirmDelete = (record) => {
   recordToDelete.value = record
@@ -418,7 +343,7 @@ const handleDelete = async () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
