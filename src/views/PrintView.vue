@@ -168,7 +168,7 @@ const PrintContent = defineComponent({
           ]),
         ]),
 
-        // Approval Section
+        // Approval Section — ✅ uses nurseDisplayName and nurseEmail
         h('div', { class: 'approval mt-12 pt-8 border-t-2 border-gray-300' }, [
           h('div', { class: 'grid grid-cols-2 gap-8' }, [
             h('div', [
@@ -176,9 +176,9 @@ const PrintContent = defineComponent({
               h(
                 'p',
                 { class: 'text-gray-800 font-medium mb-1' },
-                printStore.nurse?.username || 'N/A',
+                printStore.nurseDisplayName,
               ),
-              h('p', { class: 'text-xs text-gray-600' }, printStore.nurse?.email || ''),
+              h('p', { class: 'text-xs text-gray-600' }, printStore.nurseEmail),
               h('div', { class: 'mt-4 pt-2 border-t border-gray-400 w-48' }),
               h('p', { class: 'text-xs text-gray-600 mt-1' }, 'Nurse Signature'),
             ]),
@@ -219,7 +219,6 @@ const formatDate = (dateString) => {
 onMounted(() => {
   const patientId = Number(route.params.patientId)
   const recordId = route.params.recordId ? Number(route.params.recordId) : null
-
   printStore.setPrintData(patientId, recordId)
 })
 
@@ -227,19 +226,13 @@ onUnmounted(() => {
   printStore.resetPrintData()
 })
 
-const goBack = () => {
-  router.back()
-}
-
-const print = () => {
-  printStore.printDocument()
-}
+const goBack = () => router.back()
+const print = () => printStore.printDocument()
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-/* Screen-only styles */
 .screen-only {
   display: block;
 }
@@ -248,7 +241,6 @@ const print = () => {
   display: none;
 }
 
-/* Print-specific styles */
 @media print {
   .screen-only {
     display: none !important;
@@ -262,13 +254,11 @@ const print = () => {
     background: white !important;
   }
 
-  /* Remove any shadows, borders that don't print well */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Page breaks */
   .record-entry {
     page-break-inside: avoid;
   }
@@ -277,7 +267,6 @@ const print = () => {
     page-break-before: avoid;
   }
 
-  /* Ensure proper margins for printing */
   @page {
     margin: 1.5cm;
   }
