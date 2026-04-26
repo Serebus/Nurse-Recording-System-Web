@@ -2,10 +2,17 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { useAuthStore } from './authStore.js'
 import * as signalR from '@microsoft/signalr'
+import {
+  startAlarmSound,
+  showAlarmNotification,
+  requestNotificationPermission,
+} from '@/composables/useAlarmNotification.js'
 
 export const useAlarmStore = defineStore('alarmStore', () => {
   const authStore = useAuthStore()
   const devices = ref({})
+
+  const alarmStopFns = {}
 
   const getHeaders = () => {
     const token = localStorage.getItem('token')
@@ -30,18 +37,76 @@ export const useAlarmStore = defineStore('alarmStore', () => {
     return s >= 1 && s <= 3
   }
 
+  // ── Normalise state from either backend ──────────────────────────
+  // Old backend sends State as string: "Idle","Calling","Coming","Ended"
+  // New backend sends State as int:     0, 1, 2, 3
+  const normaliseState = (raw) => {
+    if (typeof raw === 'number') return raw
+    const map = { idle: 0, calling: 1, coming: 2, ended: 3 }
+    return map[String(raw).toLowerCase()] ?? 0
+  }
+
+  // ── Sound helpers ─────────────────────────────────────────────────
+  const stopAlarm = (deviceId) => {
+    if (alarmStopFns[deviceId]) {
+      alarmStopFns[deviceId]()
+      delete alarmStopFns[deviceId]
+    }
+  }
+
+  const triggerSound = (deviceId) => {
+    if (alarmStopFns[deviceId]) return
+    try {
+      alarmStopFns[deviceId] = startAlarmSound()
+    } catch {
+      // AudioContext blocked — start on first gesture
+      const resume = () => {
+        if (!alarmStopFns[deviceId]) {
+          try { alarmStopFns[deviceId] = startAlarmSound() } catch {}
+        }
+        document.removeEventListener('click', resume)
+        document.removeEventListener('keydown', resume)
+      }
+      document.addEventListener('click', resume)
+      document.addEventListener('keydown', resume)
+    }
+  }
+
+  // ── Handle any incoming alarm payload ────────────────────────────
+  const handleAlarm = (alarm, showNotif = true) => {
+    const id = alarm.DeviceId ?? alarm.deviceId
+    if (id == null) return
+
+    const prev = getDeviceState(id).rawState
+    const next = normaliseState(alarm.State ?? alarm.state ?? 0)
+
+    getDeviceState(id).rawState = next
+
+    if (next === 1 && prev !== 1) {
+      triggerSound(id)
+      if (showNotif) {
+        showAlarmNotification(
+          id,
+          '🔔 Nurse Call — Patient Needs Help',
+          `Device ${id}: Patient pressed the call button.`,
+          () => window.focus(),
+        )
+      }
+    } else if (prev === 1 && next !== 1) {
+      stopAlarm(id)
+    }
+  }
+
   // ── SignalR hub connection ────────────────────────────────────────
   let connection = null
 
   const buildConnection = () => {
     const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
-
     return new signalR.HubConnectionBuilder()
       .withUrl(`${base}/alarmhub`, {
-        // SignalR handles JWT auth cleanly via accessTokenFactory
         accessTokenFactory: () => localStorage.getItem('token') ?? '',
       })
-      .withAutomaticReconnect()        // built-in reconnect, no manual timer needed
+      .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning)
       .build()
   }
@@ -49,25 +114,21 @@ export const useAlarmStore = defineStore('alarmStore', () => {
   const startListening = async () => {
     if (connection) return
 
+    await requestNotificationPermission()
+
     connection = buildConnection()
 
-    // Server calls this when any alarm state changes
-connection.on('AlarmUpdated', (alarm) => {
-  const id = alarm.DeviceId ?? alarm.deviceId
-  if (id != null) {
-    getDeviceState(id).rawState = alarm.State ?? alarm.state ?? 0
-  }
-})
+    // New backend
+    connection.on('AlarmUpdated', (alarm) => handleAlarm(alarm, true))
 
-    // Server calls this on connect to send all current states
-connection.on('AlarmSnapshot', (alarms) => {
-  alarms.forEach((alarm) => {
-    const id = alarm.DeviceId ?? alarm.deviceId
-    if (id != null) {
-      getDeviceState(id).rawState = alarm.State ?? alarm.state ?? 0
-    }
-  })
-})
+    // Old backend (State is string here)
+    connection.on('ReceiveStateChange', (alarm) => handleAlarm(alarm, true))
+
+    // Snapshot — no notification, just restore state + sound if needed
+    connection.on('AlarmSnapshot', (alarms) => {
+      const list = Array.isArray(alarms) ? alarms : [alarms]
+      list.forEach((alarm) => handleAlarm(alarm, false))
+    })
 
     try {
       await connection.start()
@@ -78,6 +139,7 @@ connection.on('AlarmSnapshot', (alarms) => {
   }
 
   const stopListening = async () => {
+    Object.keys(alarmStopFns).forEach(stopAlarm)
     if (connection) {
       await connection.stop()
       connection = null
@@ -85,7 +147,7 @@ connection.on('AlarmSnapshot', (alarms) => {
     devices.value = {}
   }
 
-  // ── Actions (REST PATCH — unchanged) ────────────────────────────
+  // ── Actions (REST PATCH) ─────────────────────────────────────────
   const updateAlarmState = async (deviceId, newState) => {
     try {
       const response = await fetch(`/api/Alarm/${deviceId}`, {
@@ -94,7 +156,7 @@ connection.on('AlarmSnapshot', (alarms) => {
         body: JSON.stringify({ State: newState }),
       })
       if (!response.ok) throw new Error('Failed to update alarm')
-      getDeviceState(deviceId).rawState = newState  // optimistic
+      getDeviceState(deviceId).rawState = newState
       return true
     } catch (error) {
       console.error('Error updating alarm:', error)
