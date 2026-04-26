@@ -5,8 +5,8 @@ import NurseCallModal from '@/components/NurseCallModal.vue'
 
 const alarmStore = useAlarmStore()   // ← this was missing
 
-onMounted(() => alarmStore.startPolling())
-onUnmounted(() => alarmStore.stopPolling())
+onMounted(() => alarmStore.startListening())
+onUnmounted(() => alarmStore.stopListening())
 </script>
 
 <template>

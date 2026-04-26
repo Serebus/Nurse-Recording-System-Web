@@ -1,12 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { useAuthStore } from './authStore.js'
+import * as signalR from '@microsoft/signalr'
 
 export const useAlarmStore = defineStore('alarmStore', () => {
   const authStore = useAuthStore()
-
-  const POLL_MS = 2000
-
   const devices = ref({})
 
   const getHeaders = () => {
@@ -18,9 +16,7 @@ export const useAlarmStore = defineStore('alarmStore', () => {
   }
 
   const getDeviceState = (deviceId) => {
-    if (!devices.value[deviceId]) {
-      devices.value[deviceId] = { rawState: 0 }
-    }
+    if (!devices.value[deviceId]) devices.value[deviceId] = { rawState: 0 }
     return devices.value[deviceId]
   }
 
@@ -34,70 +30,85 @@ export const useAlarmStore = defineStore('alarmStore', () => {
     return s >= 1 && s <= 3
   }
 
-  // ── Single global poll ──────────────────────────────────────────
-  let globalPollInterval = null
+  // ── SignalR hub connection ────────────────────────────────────────
+  let connection = null
 
-  const fetchAllAlarms = async () => {
-    try {
-      const response = await fetch('/api/Alarm', { headers: getHeaders() })
-      if (!response.ok) throw new Error('Failed to fetch alarms')
-      const data = await response.json()
+  const buildConnection = () => {
+    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
-      data.forEach((alarm) => {
-        const id = alarm.DeviceId ?? alarm.deviceId
-        if (id) {
-          getDeviceState(id).rawState = alarm.State ?? alarm.state ?? 0
-        }
+    return new signalR.HubConnectionBuilder()
+      .withUrl(`${base}/alarmhub`, {
+        // SignalR handles JWT auth cleanly via accessTokenFactory
+        accessTokenFactory: () => localStorage.getItem('token') ?? '',
       })
-    } catch (error) {
-      console.error('Error fetching alarms:', error)
+      .withAutomaticReconnect()        // built-in reconnect, no manual timer needed
+      .configureLogging(signalR.LogLevel.Warning)
+      .build()
+  }
+
+  const startListening = async () => {
+    if (connection) return
+
+    connection = buildConnection()
+
+    // Server calls this when any alarm state changes
+connection.on('AlarmUpdated', (alarm) => {
+  const id = alarm.DeviceId ?? alarm.deviceId
+  if (id != null) {
+    getDeviceState(id).rawState = alarm.State ?? alarm.state ?? 0
+  }
+})
+
+    // Server calls this on connect to send all current states
+connection.on('AlarmSnapshot', (alarms) => {
+  alarms.forEach((alarm) => {
+    const id = alarm.DeviceId ?? alarm.deviceId
+    if (id != null) {
+      getDeviceState(id).rawState = alarm.State ?? alarm.state ?? 0
+    }
+  })
+})
+
+    try {
+      await connection.start()
+      console.log('[AlarmStore] SignalR connected')
+    } catch (err) {
+      console.error('[AlarmStore] SignalR connection failed:', err)
     }
   }
 
-  const startPolling = () => {
-    fetchAllAlarms()
-    if (!globalPollInterval) {
-      globalPollInterval = setInterval(fetchAllAlarms, POLL_MS)
+  const stopListening = async () => {
+    if (connection) {
+      await connection.stop()
+      connection = null
     }
-  }
-
-  const stopPolling = () => {
-    if (globalPollInterval) {
-      clearInterval(globalPollInterval)
-      globalPollInterval = null
-    }
-  }
-
-  const stopAllPolling = () => {
-    stopPolling()
     devices.value = {}
   }
 
-  // ── Alarm actions ───────────────────────────────────────────────
-const updateAlarmState = async (deviceId, newState) => {
-  try {
-    const response = await fetch(`/api/Alarm/${deviceId}`, {  // ← deviceId in URL
-      method: 'PATCH',
-      headers: getHeaders(),
-      body: JSON.stringify({ State: newState }),               // ← only State in body
-    })
-    if (!response.ok) throw new Error('Failed to update alarm')
-    getDeviceState(deviceId).rawState = newState
-    return true
-  } catch (error) {
-    console.error('Error updating alarm:', error)
-    return false
+  // ── Actions (REST PATCH — unchanged) ────────────────────────────
+  const updateAlarmState = async (deviceId, newState) => {
+    try {
+      const response = await fetch(`/api/Alarm/${deviceId}`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ State: newState }),
+      })
+      if (!response.ok) throw new Error('Failed to update alarm')
+      getDeviceState(deviceId).rawState = newState  // optimistic
+      return true
+    } catch (error) {
+      console.error('Error updating alarm:', error)
+      return false
+    }
   }
-}
 
   const setComing   = (deviceId) => updateAlarmState(deviceId, 2)
   const dismissCall = (deviceId) => updateAlarmState(deviceId, 0)
   const endCall     = (deviceId) => updateAlarmState(deviceId, 3)
 
-  // ── Stop on logout ──────────────────────────────────────────────
   watch(
     () => authStore.isAuthenticated,
-    (isAuth) => { if (!isAuth) stopAllPolling() },
+    (isAuth) => { if (!isAuth) stopListening() },
     { immediate: true }
   )
 
@@ -105,8 +116,8 @@ const updateAlarmState = async (deviceId, newState) => {
     devices,
     callStateFor,
     isVisibleFor,
-    startPolling,
-    stopPolling,
+    startListening,
+    stopListening,
     setComing,
     dismissCall,
     endCall,
